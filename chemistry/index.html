@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chemistry Obby</title>
+</head>
+<body>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800;900&display=swap">
+<style>
+/* Layout: one phone-sized column. A sky "obby" world: a map of floating stage platforms, then a full-screen run per stage.
+   Single committed bright game look (not theme-switched); every color is explicit. */
+:root{
+  --sky:#7cc7ff; --sky-deep:#3d9be9; --ink:#14213d; --paper:#ffffff;
+  --grass:#2fd36b; --grass-dark:#15a24b; --dirt:#a8642d; --dirt-dark:#7a4519;
+  --lava:#ff5a36; --lava-dark:#d63c1c; --coin:#ffc83d; --coin-dark:#e09a00;
+  --lock:#9fb3c8; --good:#18b85a; --bad:#ef3b2d; --panel:#f3f8ff; --muted:#5a6b85;
+  --display:"Bungee", "Arial Black", Impact, system-ui, sans-serif;
+  --body:"Nunito", ui-rounded, "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:600;font-size:16px;
+  background-image:linear-gradient(180deg,var(--sky-deep) 0%,var(--sky) 55%,#b9e3ff 100%);background-attachment:fixed;min-height:100%}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:12px 40px;min-height:100%;position:relative}
+.cloud{position:fixed;background:#fff;opacity:.85;pointer-events:none;z-index:0;
+  box-shadow:24px 0 0 #fff, 48px 0 0 #fff, 24px -16px 0 #fff}
+.c1{top:90px;left:-10px;width:24px;height:16px}
+.c2{top:260px;right:60px;width:24px;height:16px}
+.c3{top:520px;left:40px;width:24px;height:16px;opacity:.6}
+@media (prefers-reduced-motion:no-preference){.c1{animation:drift 38s linear infinite}.c2{animation:drift 52s linear infinite reverse}}
+@keyframes drift{from{transform:translateX(-40px)}to{transform:translateX(60vw)}}
+main{position:relative;z-index:1}
+
+/* HUD */
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:8px;align-items:center;justify-content:space-between;padding-block:8px}
+.chip{display:flex;align-items:center;gap:6px;background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:4px 10px;
+  font-family:var(--display);font-size:15px;box-shadow:0 4px 0 var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.coin{width:16px;height:16px;border-radius:50%;background:var(--coin);border:3px solid var(--coin-dark);flex:none}
+.hearts{display:flex;gap:3px}
+.heart{width:18px;height:16px;position:relative;flex:none}
+.heart::before{content:"";position:absolute;inset:0;background:var(--lava);
+  clip-path:polygon(0 25%,25% 0,50% 20%,75% 0,100% 25%,100% 50%,50% 100%,0 50%)}
+.heart.gone::before{background:#c9d3df}
+.iconbtn{background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:4px 10px;font-family:var(--display);font-size:13px;box-shadow:0 4px 0 var(--ink)}
+.iconbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+
+/* Title */
+.logo{text-align:center;margin:10px 0 6px}
+.logo h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,10vw,52px);line-height:.95;margin:0;color:var(--paper);
+  text-shadow:0 4px 0 var(--ink),3px 0 0 var(--ink),-3px 0 0 var(--ink),0 -3px 0 var(--ink),3px 4px 0 var(--ink),-3px 4px 0 var(--ink);letter-spacing:1px}
+.logo p{margin:10px auto 0;max-width:34ch;font-weight:800;color:var(--ink);background:rgba(255,255,255,.75);border-radius:10px;padding:6px 10px;text-wrap:balance}
+
+/* Map */
+.map{display:flex;flex-direction:column-reverse;gap:14px;margin-top:18px}
+.plat{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;width:86%;text-align:left;border:0;padding:0;background:none}
+.plat:nth-child(even){margin-left:auto}
+.plat .block{width:58px;height:58px;flex:none;border:3px solid var(--ink);border-radius:8px;position:relative;
+  background:linear-gradient(var(--grass) 0 38%,var(--dirt) 38% 100%);box-shadow:0 5px 0 var(--ink);
+  display:grid;place-items:center;font-family:var(--display);font-size:22px;color:var(--paper);text-shadow:0 2px 0 var(--ink)}
+.plat .block::after{content:"";position:absolute;left:6px;right:6px;bottom:6px;height:6px;background:var(--dirt-dark);opacity:.5;border-radius:2px}
+.plat.boss .block{background:linear-gradient(#ff8a3d 0 38%,var(--lava-dark) 38% 100%)}
+.plat.locked .block{background:var(--lock);filter:saturate(.3)}
+.plat .meta{background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:8px 10px;box-shadow:0 4px 0 var(--ink);min-width:0}
+.plat .meta b{display:block;font-family:var(--display);font-weight:400;font-size:15px;line-height:1.15}
+.plat .meta span{display:block;font-size:13px;color:var(--muted);font-weight:800}
+.plat.locked .meta{opacity:.7}
+.stars{display:flex;gap:2px}
+.star{width:16px;height:16px;background:#cdd6e2;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.star.on{background:var(--coin)}
+.plat:not(.locked):active .block{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.lavabar{margin-top:18px;height:34px;border:3px solid var(--ink);border-radius:8px;
+  background:repeating-linear-gradient(135deg,var(--lava) 0 14px,#ff7a4d 14px 28px);box-shadow:0 4px 0 var(--ink);
+  display:grid;place-items:center;font-family:var(--display);color:var(--paper);font-size:13px;text-shadow:0 2px 0 var(--ink)}
+@media (prefers-reduced-motion:no-preference){.lavabar{animation:lava 2s linear infinite;background-size:40px 40px}}
+@keyframes lava{to{background-position:40px 0}}
+.badges{margin-top:20px;background:var(--paper);border:3px solid var(--ink);border-radius:12px;padding:12px;box-shadow:0 5px 0 var(--ink)}
+.badges h2,.panel h2{font-family:var(--display);font-weight:400;font-size:16px;margin:0 0 8px}
+.badgerow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.badge{border:2px dashed var(--lock);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;font-weight:900;line-height:1.15;color:var(--muted);min-width:0}
+.badge i{display:block;width:30px;height:30px;margin:0 auto 4px;border-radius:6px;background:var(--lock);border:2px solid var(--ink);transform:rotate(45deg) scale(.8)}
+.badge.on{border:2px solid var(--ink);color:var(--ink);background:#fff8dc}
+.badge.on i{background:var(--coin)}
+
+/* Run screen */
+.run{display:flex;flex-direction:column;gap:12px}
+.progress{height:16px;border:3px solid var(--ink);border-radius:8px;background:var(--paper);overflow:hidden;box-shadow:0 3px 0 var(--ink)}
+.progress i{display:block;height:100%;background:var(--grass);border-right:3px solid var(--ink);transition:width .3s}
+.stagehead{font-family:var(--display);font-size:13px;color:var(--paper);text-shadow:0 2px 0 var(--ink);letter-spacing:.5px}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:16px;box-shadow:0 6px 0 var(--ink)}
+.card .tag{display:inline-block;font-family:var(--display);font-size:11px;background:var(--ink);color:var(--paper);border-radius:6px;padding:3px 7px;margin-bottom:8px;letter-spacing:.5px}
+.card .scene{background:var(--panel);border-left:5px solid var(--sky-deep);border-radius:6px;padding:8px 10px;margin:0 0 10px;font-size:15px;font-style:italic}
+.card h3{margin:0;font-size:19px;line-height:1.3;font-weight:900;text-wrap:balance}
+.choices{display:grid;gap:10px}
+.choice{display:block;width:100%;text-align:left;background:var(--paper);border:3px solid var(--ink);border-radius:12px;padding:12px 14px;
+  font-weight:800;font-size:16px;line-height:1.3;box-shadow:0 4px 0 var(--ink);min-height:52px}
+.choice:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.choice.right{background:#c9f7da;border-color:var(--good);box-shadow:0 4px 0 var(--good)}
+.choice.wrong{background:#ffd9d4;border-color:var(--bad);box-shadow:0 4px 0 var(--bad)}
+.choice[disabled]{cursor:default}
+.choice.dim{opacity:.55}
+.feedback{border:3px solid var(--ink);border-radius:14px;padding:14px;box-shadow:0 6px 0 var(--ink)}
+.feedback.ok{background:#e4fbec}
+.feedback.no{background:#fff0ec}
+.feedback b{font-family:var(--display);font-weight:400;font-size:17px;display:block;margin-bottom:4px}
+.feedback p{margin:0 0 12px;line-height:1.4}
+.big{display:block;width:100%;font-family:var(--display);font-size:18px;border:3px solid var(--ink);border-radius:12px;padding:12px;
+  background:var(--grass);color:var(--paper);text-shadow:0 2px 0 var(--ink);box-shadow:0 5px 0 var(--grass-dark),0 5px 0 3px var(--ink)}
+.big:active{transform:translateY(4px);box-shadow:0 1px 0 var(--grass-dark),0 1px 0 3px var(--ink)}
+.big.alt{background:var(--paper);color:var(--ink);text-shadow:none;box-shadow:0 5px 0 var(--ink)}
+.powerup .tag{background:var(--coin-dark)}
+.powerup ul{margin:8px 0 0;padding-left:20px;line-height:1.45}
+.powerup li{margin-bottom:4px}
+.powerup h3{font-family:var(--display);font-weight:400;font-size:20px}
+.streak{font-family:var(--display);font-size:13px;color:var(--ink);background:var(--coin);border:3px solid var(--ink);border-radius:8px;padding:2px 8px;align-self:center}
+.toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:20;font-family:var(--display);font-size:22px;color:var(--paper);
+  text-shadow:0 3px 0 var(--ink),2px 0 0 var(--ink),-2px 0 0 var(--ink);pointer-events:none;white-space:nowrap}
+@media (prefers-reduced-motion:no-preference){.toast{animation:pop 1s ease-out forwards}.shake{animation:shake .35s}}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+
+/* End screens + report */
+.result{text-align:center}
+.result h2{font-family:var(--display);font-weight:400;font-size:28px;margin:4px 0 8px}
+.result .stars{justify-content:center;gap:6px;margin:6px 0 10px}
+.result .star{width:40px;height:40px}
+.result p{margin:0 0 14px;line-height:1.45}
+.btnrow{display:grid;gap:10px}
+.panel{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:14px;box-shadow:0 6px 0 var(--ink)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 4px;border-bottom:2px solid #e3e9f2;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.miss{border-left:5px solid var(--lava);background:var(--panel);border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:14px;line-height:1.35}
+.miss small{display:block;color:var(--good);font-weight:900;margin-top:4px}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.4}
+.avatar{width:54px;height:70px;margin:0 auto 6px;position:relative}
+.avatar .h{position:absolute;left:12px;top:0;width:30px;height:28px;background:#ffd23f;border:3px solid var(--ink);border-radius:4px}
+.avatar .h::before,.avatar .h::after{content:"";position:absolute;top:9px;width:5px;height:6px;background:var(--ink)}
+.avatar .h::before{left:6px}.avatar .h::after{right:6px}
+.avatar .b{position:absolute;left:8px;top:30px;width:38px;height:26px;background:var(--sky-deep);border:3px solid var(--ink);border-radius:3px}
+.avatar .l{position:absolute;left:12px;top:56px;width:30px;height:14px;background:var(--grass-dark);border:3px solid var(--ink);border-top:0}
+@media (prefers-reduced-motion:no-preference){.avatar.jump{animation:jump .6s ease-in-out infinite alternate}}
+@keyframes jump{to{transform:translateY(-10px)}}
+</style>
+
+<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+<div class="wrap"><main id="app"></main></div>
+
+<script>
+/* ============ CONTENT: from Mr. Mimna's SNC1W Unit 1 (Chemistry) class text + practice unit test ============ */
+const STAGES = [
+{ id:"particles", name:"Particles & States", badge:"Particle Pro",
+  power:{title:"Particle Theory & States", pts:[
+    "<b>Matter</b> has mass and takes up space. Light and heat are NOT matter.",
+    "Particle theory: all matter is made of particles · same substance = identical particles · always moving (faster when hotter) · they <b>attract</b> each other · there are spaces between them.",
+    "<b>Solid</b>: definite shape + fixed volume, particles vibrate in place. <b>Liquid</b>: takes container's shape, fixed volume, particles slide. <b>Gas</b>: fills container, particles far apart.",
+    "Energy IN: melting, evaporation, sublimation (solid → gas). Energy OUT: freezing, condensation, deposition (gas → solid).",
+    "Every change of state is a <b>physical</b> change."]},
+  qs:[
+  {id:"p1",q:"Which of these is NOT matter?",a:"Light",w:["Air","Water","Your desk"],
+   ex:"Light has energy but no mass, so it isn't matter. Air has mass, even though you can't see it."},
+  {id:"p2",q:"Which is NOT a key point of the particle theory of matter?",a:"Particles naturally repel one another",w:["All matter is made up of particles","Particles are in constant motion","There are spaces between particles"],
+   ex:"Straight off the practice test. Particles ATTRACT each other, and more strongly when they're closer together."},
+  {id:"p3",q:"What happens to particles when a substance is heated?",a:"They move faster",w:["They get bigger","They stop moving","They turn into new particles"],
+   ex:"More energy = faster particles. The particles themselves don't grow or change into something new."},
+  {id:"p4",q:"A solid has…",a:"a definite shape and a definite volume",w:["an indefinite shape and a definite volume","an indefinite shape and an indefinite volume","a definite shape and an indefinite volume"],
+   ex:"Solid particles are packed tightly in a fixed pattern, so both shape and volume stay put. (Practice test question 14.)"},
+  {id:"p5",q:"Why can a gas be squeezed into a smaller container but a solid can't?",a:"Gas particles have lots of space between them",w:["Gas particles are smaller","Solid particles move faster","Gases aren't made of particles"],
+   ex:"Gas particles are far apart, so there's empty space to squeeze out. Solid particles are already packed tight."},
+  {id:"p6",sc:"Overnight, frost forms on a car windshield straight from water vapour in the air.",q:"Which change of state is this?",a:"Deposition",w:["Freezing","Condensation","Sublimation"],
+   ex:"Gas → solid with no liquid stage = deposition. Energy is being removed."},
+  {id:"p7",sc:"Dry ice (solid carbon dioxide) disappears into a gas at room temperature.",q:"Which change of state is this?",a:"Sublimation",w:["Evaporation","Melting","Deposition"],
+   ex:"Solid → gas with no liquid in between = sublimation. Energy is being added."},
+  {id:"p8",sc:"Water droplets form on the outside of a cold glass of pop.",q:"Which change of state is this?",a:"Condensation",w:["Evaporation","Melting","Deposition"],
+   ex:"Water vapour in the air (gas) cools on the glass and turns to liquid: condensation."},
+  {id:"p9",q:"When ice melts, what kind of change is it?",a:"Physical: it's still water, just a new state",w:["Chemical: a new substance forms","Chemical: energy is added","Physical: the water molecules break apart"],
+   ex:"Melted ice is made of exactly the same H₂O molecules as frozen ice. Changes of state are always physical."}
+  ]},
+{ id:"classify", name:"Classifying Matter", badge:"Mixture Master",
+  power:{title:"Pure Substances & Mixtures", pts:[
+    "<b>Pure substance</b> = one kind of particle. <b>Element</b>: one type of atom (He, Fe, O₂). <b>Compound</b>: elements chemically combined (H₂O, NaCl, CO₂).",
+    "<b>Mixture</b> = substances physically combined. <b>Homogeneous</b>: looks the same throughout (salt water, air). <b>Heterogeneous</b>: parts visible (soil, trail mix).",
+    "Mixture types: <b>mechanical</b> (parts visible) · <b>solution</b> (dissolved evenly) · <b>suspension</b> (cloudy, settles out) · <b>colloid</b> (cloudy, won't separate: milk, ketchup)."]},
+  qs:[
+  {id:"c1",q:"Carbon dioxide, nickel, and nitrogen are all examples of…",a:"Pure substances",w:["Elements","Compounds","Mixtures"],
+   ex:"Nickel and nitrogen are elements but CO₂ is a compound. The only label that fits all three is pure substance. (Practice test Q1.)"},
+  {id:"c2",q:"Methane (CH₄), carbon dioxide, and water are all examples of…",a:"Compounds",w:["Elements","Mixtures","Alloys"],
+   ex:"Each one is two or more elements chemically combined, so each is a compound. (Practice test Q2.)"},
+  {id:"c3",q:"What is an element?",a:"A pure substance made of only one type of atom",w:["Two elements chemically bonded","Any substance that dissolves","A mixture you can't see through"],
+   ex:"Every element is on the periodic table. Two or more elements bonded together make a compound."},
+  {id:"c4",sc:"Ice cream ingredient: sugar (C₆H₁₂O₆).",q:"Classify sugar.",a:"Pure substance: compound",w:["Pure substance: element","Homogeneous mixture","Heterogeneous mixture"],
+   ex:"One kind of particle made from three elements chemically combined (C, H, O) = compound. From the practice test's ice cream question."},
+  {id:"c5",sc:"Ice cream ingredient: milk. Every spoonful looks the same.",q:"Classify milk.",a:"Homogeneous mixture",w:["Heterogeneous mixture","Compound","Element"],
+   ex:"The practice test answer key calls milk a homogeneous mixture: you can't see the separate parts."},
+  {id:"c6",sc:"Ice cream topping: rainbow sprinkles.",q:"Classify the sprinkles.",a:"Heterogeneous mixture",w:["Homogeneous mixture","Compound","Element"],
+   ex:"You can see the different colours and pieces, so it's heterogeneous."},
+  {id:"c7",q:"Salt dissolved evenly in water is a…",a:"Solution",w:["Suspension","Colloid","Mechanical mixture"],
+   ex:"One substance dissolved evenly in another, and you can't see the separate parts = solution."},
+  {id:"c8",sc:"Muddy river water looks cloudy, but if you leave it still, the dirt settles to the bottom.",q:"What type of mixture is it?",a:"Suspension",w:["Solution","Colloid","Element"],
+   ex:"Cloudy AND settles out (or can be filtered) = suspension."},
+  {id:"c9",q:"Milk and ketchup are cloudy, and their parts never settle out. They are…",a:"Colloids",w:["Suspensions","Solutions","Compounds"],
+   ex:"A colloid's particles are so tiny they can't easily be separated. Suspensions settle; colloids don't."}
+  ]},
+{ id:"changes", name:"Properties & Changes", badge:"Change Detective",
+  power:{title:"Physical vs Chemical", pts:[
+    "The test: does it make a NEW substance? No → <b>physical</b>. Yes → <b>chemical</b>.",
+    "Physical properties: colour, state, hardness, density, melting/boiling point, conductivity, smell, clarity.",
+    "Chemical properties: flammability, reactivity with water, acid or air, toxicity.",
+    "Clues of a chemical change: colour change, new odour, gas (bubbles), <b>precipitate</b> (new solid), heat/light/sound, hard to reverse.",
+    "State at a temperature: below melting point = solid · between = liquid · above boiling point = gas."]},
+  qs:[
+  {id:"h1",q:"“Diamonds have a hardness of 10 on the Mohs scale.” This is a…",a:"Physical property",w:["Chemical property","Chemical change","Physical change"],
+   ex:"You can test hardness without turning diamond into something new. (Practice test Q17.)"},
+  {id:"h2",q:"“Sodium azide in airbags decomposes rapidly to form nitrogen gas.” This is a…",a:"Chemical property",w:["Physical property","Change of state","Mixture"],
+   ex:"It describes the substance turning into a NEW substance (nitrogen gas), so it's chemical."},
+  {id:"h3",q:"“Ethyl propanoate smells like pineapples.” This is a…",a:"Physical property",w:["Chemical property","Chemical change","Precipitate"],
+   ex:"Smelling something doesn't change it into a new substance. The answer key marks this one P."},
+  {id:"h4",q:"Which one involves a chemical change?",a:"Two liquids mix and a gas is produced",w:["Freezing liquid water to ice","Ice sublimates to water vapour","Cutting a cake into slices"],
+   ex:"Gas forming (bubbles) is evidence of a new substance. The others are all physical. (Practice test Q3.)"},
+  {id:"h5",q:"Which one does NOT involve a chemical change?",a:"Water boils to a gas",w:["Mixing two liquids and a solid forms","Baking a cake at 350°C","Colourful lights from fireworks"],
+   ex:"Boiling is a change of state, so it's physical. A solid forming is a precipitate, baking makes a new substance, fireworks give off light. (Practice test Q4.)"},
+  {id:"h6",q:"Two clear solutions are mixed and a cloudy yellow solid sinks to the bottom. That solid is called a…",a:"Precipitate",w:["Colloid","Suspension","Crystal lattice"],
+   ex:"A new solid forming when two solutions mix is a precipitate, strong evidence of a chemical change."},
+  {id:"h7",q:"A substance melts at −95°C and boils at 56°C. What state is it at room temperature (20°C)?",a:"Liquid",w:["Solid","Gas","Plasma"],
+   ex:"20°C is above the melting point but below the boiling point, so it's a liquid."},
+  {id:"h8",q:"Oxygen melts at −218°C and boils at −183°C. What state is it at 20°C?",a:"Gas",w:["Solid","Liquid","Plasma"],
+   ex:"20°C is way above oxygen's boiling point, so it's a gas."},
+  {id:"h9",q:"Which of these is a CHANGE, not a property?",a:"Rusting",w:["Flammability","Density","Melting point"],
+   ex:"A property describes matter (like an adjective). A change is something happening (like a verb). Rusting is happening."}
+  ]},
+{ id:"models", name:"Atomic Models", badge:"Atom Historian",
+  power:{title:"Models of the Atom", pts:[
+    "Order: <b>D</b>alton's <b>T</b>eam <b>R</b>ead <b>B</b>ooks <b>C</b>arefully.",
+    "<b>Dalton</b> (1808): billiard ball, solid sphere. <b>Thomson</b> (1897): discovered the <b>electron</b>, raisin bun model.",
+    "<b>Rutherford</b> (1909): gold foil → tiny dense positive <b>nucleus</b>, atom mostly empty space.",
+    "<b>Bohr</b> (1913): electrons in fixed <b>shells</b>. <b>Chadwick</b> (1932): discovered the <b>neutron</b>.",
+    "Proton: nucleus, +1. Neutron: nucleus, 0. Electron: shells, −1, almost no mass."]},
+  qs:[
+  {id:"m1",q:"Who is credited with discovering the electron?",a:"Thomson",w:["Rutherford","Chadwick","Bohr"],
+   ex:"Thomson found the electron with cathode rays and proposed the raisin bun model. (Practice test Q11.)"},
+  {id:"m2",q:"Which scientist first proposed a dense, positively charged nucleus?",a:"Rutherford",w:["Thomson","Chadwick","Bohr"],
+   ex:"Rutherford's gold foil experiment revealed the nucleus. (Practice test Q12.)"},
+  {id:"m3",q:"Who discovered the neutron?",a:"Chadwick",w:["Dalton","Bohr","Thomson"],
+   ex:"Chadwick, 1932: a neutral particle in the nucleus with about the same mass as a proton."},
+  {id:"m4",q:"Which model pictured the atom as a solid, indivisible sphere?",a:"Dalton's billiard ball model",w:["Thomson's raisin bun model","Bohr's shell model","Rutherford's nuclear model"],
+   ex:"Dalton's 1808 model: atoms are solid spheres, like billiard balls."},
+  {id:"m5",q:"Who said electrons travel in fixed shells around the nucleus?",a:"Bohr",w:["Rutherford","Dalton","Chadwick"],
+   ex:"Bohr's shells (energy levels) are what you draw in every Bohr-Rutherford diagram."},
+  {id:"m6",sc:"Rutherford fired positive particles at thin gold foil. MOST went straight through. A few bounced right back.",q:"What did the particles that bounced back tell him?",a:"There's a tiny, dense, positive centre",w:["Atoms are solid all the way through","Electrons are positive","The gold foil was too thick"],
+   ex:"Most going through = mostly empty space. A few bouncing back = something small, dense and positive pushed them away: the nucleus."},
+  {id:"m7",q:"Which order is correct, oldest to newest?",a:"Dalton, Thomson, Rutherford, Bohr, Chadwick",w:["Thomson, Dalton, Bohr, Rutherford, Chadwick","Dalton, Rutherford, Thomson, Chadwick, Bohr","Bohr, Dalton, Thomson, Rutherford, Chadwick"],
+   ex:"Dalton's Team Read Books Carefully."},
+  {id:"m8",q:"Which particle is in the nucleus and has NO charge?",a:"Neutron",w:["Proton","Electron","Ion"],
+   ex:"Neutron = neutral. Protons are also in the nucleus but they're positive."},
+  {id:"m9",q:"Which particle has almost no mass compared to the others?",a:"Electron",w:["Proton","Neutron","Nucleus"],
+   ex:"Electrons are so light they're left out when you calculate atomic mass."}
+  ]},
+{ id:"bohr", name:"Bohr-Rutherford", badge:"Shell Builder",
+  power:{title:"Counting & Drawing", pts:[
+    "<b>Protons</b> = atomic number. <b>Electrons</b> = atomic number (neutral atom).",
+    "<b>Neutrons</b> = atomic mass (rounded) − atomic number.",
+    "Shells fill from the inside out: <b>2, 8, 8</b>. Potassium and calcium put the rest in a 4th shell.",
+    "Inside the nucleus write p⁺ and n⁰. Electrons are dots on the rings."]},
+  qs:[
+  {id:"b1",q:"What does the atomic number tell you?",a:"The number of protons",w:["The number of neutrons","Protons plus neutrons","The number of shells"],
+   ex:"Atomic number = protons. In a neutral atom, it also equals electrons."},
+  {id:"b2",q:"Chlorine: atomic number 17, atomic mass 35. How many neutrons?",a:"18",w:["17","35","52"],
+   ex:"Neutrons = mass − atomic number = 35 − 17 = 18."},
+  {id:"b3",q:"Lead: atomic number 82, atomic mass 207. How many neutrons?",a:"125",w:["82","207","289"],
+   ex:"207 − 82 = 125. This row is on the practice test table."},
+  {id:"b4",q:"Silver: atomic number 47, atomic mass 108. How many neutrons?",a:"61",w:["47","108","155"],
+   ex:"108 − 47 = 61. Also from the practice test table."},
+  {id:"b5",q:"What is the most electrons each of the first three shells can hold?",a:"2, 8, 8",w:["2, 2, 8","8, 8, 8","1, 2, 3"],
+   ex:"First shell 2, second 8, third 8. Fill from the inside out."},
+  {id:"b6",q:"Oxygen has 8 electrons. How are they arranged in shells?",a:"2, 6",w:["8","4, 4","2, 2, 4"],
+   ex:"Fill the first shell (2), then the rest go in the second shell (6)."},
+  {id:"b7",q:"Sodium has 11 electrons. How are they arranged?",a:"2, 8, 1",w:["2, 9","8, 3","2, 7, 2"],
+   ex:"2 in shell one, 8 in shell two, then 1 left over in shell three."},
+  {id:"b8",q:"Potassium has 19 electrons. How are they arranged?",a:"2, 8, 8, 1",w:["2, 8, 9","2, 9, 8","8, 8, 3"],
+   ex:"Shell three maxes out at 8, so the 19th electron starts a 4th shell."},
+  {id:"b9",q:"A neon atom (10 protons, 10 neutrons) has which electron arrangement?",a:"2, 8, a full outer shell",w:["2, 6, 2","2, 8, 1 extra","8, 2"],
+   ex:"2 + 8 = 10. A full outer shell is why neon (a noble gas) doesn't react. You draw this on the practice test."}
+  ]},
+{ id:"table", name:"Periodic Table", badge:"Table Navigator",
+  power:{title:"Reading the Periodic Table", pts:[
+    "<b>Period</b> = row. Period number = number of shells. <b>Group</b> = column; same number of valence electrons, so similar properties.",
+    "<b>Metals</b> (left): shiny, malleable, conduct. <b>Non-metals</b> (right): dull, brittle, don't conduct. <b>Metalloids</b>: along the staircase.",
+    "Group 1 alkali metals (most reactive metals) · Group 2 alkaline earth metals · Group 17 halogens (most reactive non-metals) · Group 18 noble gases (don't react).",
+    "Mendeleev left gaps for undiscovered elements and predicted their properties. Today's table is ordered by atomic number."]},
+  qs:[
+  {id:"t1",q:"A horizontal row on the periodic table is called a…",a:"Period",w:["Group","Family","Shell"],
+   ex:"Periods are rows; groups (families) are columns. The period number = number of electron shells."},
+  {id:"t2",q:"Why do elements in the same group have similar properties?",a:"They have the same number of valence electrons",w:["They have the same atomic mass","They were discovered together","They have the same number of protons"],
+   ex:"Same number of outer-shell electrons = similar chemical behaviour."},
+  {id:"t3",q:"Which best describes non-metals?",a:"Dull, brittle, do not conduct heat and electricity",w:["Dull, brittle, conduct heat and electricity","Shiny, malleable, conduct heat and electricity","Shiny, malleable, conduct heat but not electricity"],
+   ex:"Practice test Q13. Shiny, malleable and conductive describes metals."},
+  {id:"t4",q:"Which metal is in the second period and has two valence electrons?",a:"Beryllium",w:["Magnesium","Calcium","Sodium"],
+   ex:"Period 2 = two shells; group 2 = two valence electrons. Beryllium is 2, 2. Magnesium is in period 3. (Practice test Q8.)"},
+  {id:"t5",q:"Which halogen has electrons in only two shells?",a:"Fluorine",w:["Iodine","Chlorine","Bromine"],
+   ex:"Two shells = period 2. The period-2 halogen is fluorine (2, 7). (Practice test Q9.)"},
+  {id:"t6",q:"Which non-metal has four more protons than a carbon atom?",a:"Neon",w:["Oxygen","Fluorine","Nitrogen"],
+   ex:"Carbon has 6 protons; 6 + 4 = 10, which is neon. (Practice test Q10.)"},
+  {id:"t7",q:"Group 18 elements are called…",a:"Noble gases",w:["Halogens","Alkali metals","Alkaline earth metals"],
+   ex:"Noble gases have a full outer shell, so they almost never react. Think of them as snobs."},
+  {id:"t8",q:"Group 1 elements (not counting hydrogen) are the…",a:"Alkali metals",w:["Alkaline earth metals","Halogens","Metalloids"],
+   ex:"Alkali metals are the most reactive metals, and they get more reactive going down the group."},
+  {id:"t9",q:"Why were Mendeleev's gaps so important?",a:"He predicted missing elements, and they were later found",w:["They made the table look neater","They separated metals and non-metals","They showed which elements were dangerous"],
+   ex:"Gallium was discovered with properties matching his predictions almost exactly, proving the pattern was real."}
+  ]},
+{ id:"bonds", name:"Ions & Bonds", badge:"Bond Breaker",
+  power:{title:"Ions, Ionic & Covalent", pts:[
+    "Atoms want a full outer shell: <b>octet</b> (8) or <b>duet</b> (2 for H, He, Li, Be, B). Only electrons move; protons never change.",
+    "<b>Cation</b> = positive, LOST electrons (metals). <b>Anion</b> = negative, GAINED electrons (non-metals).",
+    "Ion charges by group: 1 → 1+, 2 → 2+, 13 → 3+, 15 → 3−, 16 → 2−, 17 → 1−, 18 → none.",
+    "<b>Ionic</b> = metal + non-metal, electrons TRANSFERRED. <b>Covalent</b> = non-metals, electrons SHARED (single 2, double 4, triple 6).",
+    "Ionic compounds: solid, high melting point, conduct when dissolved or melted."]},
+  qs:[
+  {id:"i1",q:"Which of these will form an anion?",a:"Oxygen",w:["Beryllium","Sodium","Helium"],
+   ex:"Oxygen is a non-metal with 6 valence electrons, so it gains 2 → O²⁻. Metals form cations; helium doesn't form ions. (Practice test Q6.)"},
+  {id:"i2",q:"Nitrogen, phosphorus, and arsenic will all have the same…",a:"Ion charge",w:["Number of electrons","Number of shells filled","Number of protons"],
+   ex:"All three are in group 15, so all gain 3 electrons → 3− ions. (Practice test Q7.)"},
+  {id:"i3",q:"A cation is…",a:"A positive ion that lost electrons",w:["A negative ion that gained electrons","A positive ion that gained protons","A neutral atom"],
+   ex:"Cations are “paws-itive.” Losing negative electrons leaves more protons than electrons."},
+  {id:"i4",q:"How many electrons does a calcium ion (Ca²⁺) have?",a:"18",w:["20","22","2"],
+   ex:"Calcium has 20 protons. 2+ means it lost 2 electrons: 20 − 2 = 18. Check: 20 − 18 = +2."},
+  {id:"i5",q:"How many electrons does a sulfide ion (S²⁻) have?",a:"18",w:["16","14","32"],
+   ex:"Sulfur has 16 protons. 2− means it gained 2: 16 + 2 = 18. From the practice test table."},
+  {id:"i6",q:"How many electrons does a magnesium ion (Mg²⁺) have?",a:"10",w:["12","14","24"],
+   ex:"Magnesium has 12 protons and lost 2 electrons: 12 − 2 = 10."},
+  {id:"i7",q:"Which of these is an ionic compound?",a:"Table salt (NaCl)",w:["Methane (CH₄)","Carbon dioxide (CO₂)","Nitrous oxide (N₂O)"],
+   ex:"Sodium is a metal, chlorine a non-metal → ionic. The others are all non-metals only. (Practice test Q15.)"},
+  {id:"i8",q:"A covalent bond forms when…",a:"Non-metal atoms share pairs of electrons",w:["A metal gives electrons to a non-metal","Two metals melt together","Protons move between atoms"],
+   ex:"Two non-metals both want electrons, so neither gives one up. They share instead."},
+  {id:"i9",q:"Which atom follows the duet rule?",a:"Hydrogen",w:["Oxygen","Chlorine","Sodium"],
+   ex:"Hydrogen is stable with just 2 electrons, because its only shell holds 2. The practice test's duet example uses hydrogen and beryllium."},
+  {id:"i10",q:"How many electrons are shared in a double bond, like O=O?",a:"4",w:["2","6","8"],
+   ex:"Single = 2 (1 pair), double = 4 (2 pairs), triple = 6 (3 pairs)."},
+  {id:"i11",q:"When do ionic compounds conduct electricity?",a:"When melted or dissolved in water",w:["Only as a solid","Never","Only when frozen"],
+   ex:"The ions have to be free to move. Solid ionic crystals don't conduct."}
+  ]},
+{ id:"naming", name:"Naming Compounds", badge:"Formula Writer",
+  power:{title:"Naming & Formulas", pts:[
+    "Step 1 always: metal in it? → <b>ionic</b>. Only non-metals? → <b>molecular</b>.",
+    "Ionic: metal name + non-metal ending in <b>-ide</b>. NO prefixes. CaCl₂ = calcium chloride.",
+    "Criss-cross: Al³⁺ + O²⁻ → Al₂O₃. Reduce if you can. Never write a 1.",
+    "Molecular prefixes: mono 1, di 2, tri 3, tetra 4, penta 5. Never put mono on the FIRST element."]},
+  qs:[
+  {id:"n1",q:"What is the formula for calcium phosphide?",a:"Ca₃P₂",w:["CaP","Ca₂P₃","CaP₂"],
+   ex:"Ca²⁺ and P³⁻. Criss-cross: Ca gets 3, P gets 2 → Ca₃P₂. (Practice test Q19a.)"},
+  {id:"n2",q:"What is the formula for sodium nitride?",a:"Na₃N",w:["NaN","NaN₃","Na₂N₃"],
+   ex:"Na⁺ and N³⁻. Criss-cross: Na gets 3, N gets 1 (not written) → Na₃N."},
+  {id:"n3",q:"What is the formula for aluminum iodide?",a:"AlI₃",w:["Al₃I","AlI","Al₂I₃"],
+   ex:"Al³⁺ and I⁻. Criss-cross: Al gets 1, I gets 3 → AlI₃."},
+  {id:"n4",q:"Name P₂O₃.",a:"Diphosphorus trioxide",w:["Phosphorus oxide","Diphosphorus trioxygen","Phosphorus trioxide"],
+   ex:"Two non-metals → molecular → prefixes. 2 P = diphosphorus, 3 O = trioxide."},
+  {id:"n5",q:"Name LiF.",a:"Lithium fluoride",w:["Monolithium monofluoride","Lithium fluorine","Lithium monofluoride"],
+   ex:"Lithium is a metal → ionic → no prefixes. Fluorine becomes fluoride."},
+  {id:"n6",q:"Name NSe₂.",a:"Nitrogen diselenide",w:["Mononitrogen diselenide","Nitrogen selenide","Dinitrogen selenide"],
+   ex:"Molecular. 1 N (no mono on the first element) + 2 Se = diselenide."},
+  {id:"n7",q:"Name K₂S.",a:"Potassium sulfide",w:["Dipotassium sulfide","Potassium sulfur","Potassium disulfide"],
+   ex:"Potassium is a metal → ionic → no prefixes, and the subscript 2 isn't said."},
+  {id:"n8",q:"Name CCl₄.",a:"Carbon tetrachloride",w:["Monocarbon tetrachloride","Carbon chloride","Tetracarbon chloride"],
+   ex:"Molecular. No mono on carbon, tetra for 4 chlorines."},
+  {id:"n9",q:"What is the correct name for CO?",a:"Carbon monoxide",w:["Monocarbon monoxide","Carbon oxide","Monocarbon oxide"],
+   ex:"Mono is never used on the first element, but it IS used on the second one when there's just one."},
+  {id:"n10",q:"Which is an ionic compound name?",a:"Magnesium oxide",w:["Dinitrogen tetroxide","Sulfur trioxide","Carbon dioxide"],
+   ex:"Magnesium is a metal. The others have prefixes because they're all non-metals."}
+  ]},
+{ id:"boss", name:"BOSS: Unit Test", badge:"Chem Champion", boss:true,
+  power:{title:"Boss: Practice Test Mash-Up", pts:[
+    "Only <b>2 hearts</b>. These come from the hardest parts of the practice unit test.",
+    "Ions: count electrons, decide anion or cation.",
+    "Bonding: metal + non-metal = transfer (ionic). Non-metal + non-metal = share (covalent).",
+    "The ice cream question: classify ingredients and describe particles."]},
+  qs:[
+  {id:"x1",sc:"The class makes ice cream: a bag of liquid ingredients turns into solid ice cream.",q:"What kind of change is this?",a:"Physical: freezing",w:["Chemical: a new substance forms","Physical: condensation","Chemical: a precipitate forms"],
+   ex:"Liquid → solid is freezing, a change of state. Still the same ingredients."},
+  {id:"x2",sc:"Same ice cream bag, now solid.",q:"How do the particles in the SOLID ice cream behave?",a:"Packed closely, vibrating in fixed positions",w:["Far apart, moving freely","Close together, sliding past each other","Not moving at all"],
+   ex:"From the answer key: solid particles are compacted with little space and vibrate in place. Liquid particles flow past each other."},
+  {id:"x3",sc:"Ice cream ingredient: table salt (NaCl).",q:"Classify table salt.",a:"Pure substance: compound",w:["Pure substance: element","Homogeneous mixture","Heterogeneous mixture"],
+   ex:"Sodium and chlorine chemically combined in a fixed ratio = compound."},
+  {id:"x4",q:"A nitrogen ion forms. What is it?",a:"N³⁻, an anion with 10 electrons",w:["N³⁺, a cation with 4 electrons","N⁵⁻, an anion with 12 electrons","N⁺, a cation with 6 electrons"],
+   ex:"Nitrogen (7 electrons, 5 valence) gains 3 → N³⁻ with 10 electrons. Gained = anion. (Practice test Q16c.)"},
+  {id:"x5",q:"A calcium ion forms. What is it?",a:"Ca²⁺, a cation",w:["Ca²⁻, an anion","Ca⁶⁻, an anion","Ca⁺, a cation"],
+   ex:"Calcium is in group 2: it loses its 2 valence electrons → Ca²⁺. Lost = cation. (Practice test Q16b.)"},
+  {id:"x6",q:"Magnesium bonds with fluorine. What forms?",a:"Magnesium fluoride, MgF₂",w:["Magnesium fluoride, MgF","Magnesium difluoride, Mg₂F","Magnesium fluorine, MgF₂"],
+   ex:"Mg gives away 2 electrons, each F takes 1, so you need two F atoms. Ionic, no prefix. (Practice test Q23a.)"},
+  {id:"x7",q:"Hydrogen bonds with chlorine. What kind of bond forms?",a:"Covalent: they share a pair of electrons (HCl)",w:["Ionic: hydrogen gives chlorine an electron","Ionic: chlorine gives hydrogen an electron","No bond: both are non-metals"],
+   ex:"Two non-metals share. H gets its duet, Cl gets its octet. Hydrogen chloride, HCl. (Practice test Q23b.)"},
+  {id:"x8",q:"Which defines a heterogeneous mixture?",a:"A mixture where the different parts can be seen",w:["A mixture that's the same throughout","Two elements chemically bonded","A pure substance with one type of atom"],
+   ex:"From the answer key: in a heterogeneous mixture the different phases are evident."},
+  {id:"x9",q:"Which defines an ionic bond?",a:"The attraction between oppositely charged ions",w:["Two atoms sharing electrons","Two metals melting together","Protons moving between atoms"],
+   ex:"From the answer key: the electrostatic attraction between a cation and an anion."}
+  ]}
+];
+
+
+/* ============ STATE ============ */
+const KEY="chemObby.v1";
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.stages)return s}catch(e){}return{coins:0,stages:{},missed:{},log:[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load();
+let DB=null;
+
+const $=s=>document.querySelector(s);
+const app=$("#app");
+let view="map", run=null;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const unlocked=i=>i===0||!!(S.stages[STAGES[i-1].id]&&S.stages[STAGES[i-1].id].best>0);
+const starsHTML=(n,max=3)=>Array.from({length:max},(_,i)=>`<i class="star ${i<n?"on":""}"></i>`).join("");
+const heartsHTML=(n,max=3)=>Array.from({length:max},(_,i)=>`<i class="heart ${i<n?"":"gone"}"></i>`).join("");
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
+function buzz(){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}}
+
+/* ============ VIEWS ============ */
+function render(){ if(view==="map")mapView(); else if(view==="power")powerView(); else if(view==="q")qView(); else if(view==="end")endView(); else if(view==="report")reportView(); window.scrollTo(0,0) }
+
+function hud(extra=""){
+  return `<div class="hud"><div class="chip"><i class="coin"></i>${S.coins}</div>${extra}<button class="iconbtn" id="rep" aria-label="Open the progress report">REPORT</button></div>`;
+}
+
+function mapView(){
+  const cleared=STAGES.filter(s=>S.stages[s.id]&&S.stages[s.id].best>0).length;
+  app.innerHTML = hud() + `
+  <div class="logo"><div class="avatar jump"><i class="h"></i><i class="b"></i><i class="l"></i></div>
+   <h1>CHEMISTRY<br>OBBY</h1>
+   <p>Climb ${STAGES.length} stages of Grade 9 Science, Unit 1. Don't fall in the lava. ${cleared}/${STAGES.length} cleared.</p></div>
+  <div class="map">${STAGES.map((s,i)=>{
+     const st=S.stages[s.id]; const lock=!unlocked(i);
+     return `<button class="plat ${s.boss?"boss":""} ${lock?"locked":""}" data-i="${i}" ${lock?'aria-disabled="true"':""}>
+       <span class="block">${s.boss?"!":i+1}</span>
+       <span class="meta"><b>${esc(s.name)}</b><span>${lock?"Locked: clear the stage below":`${s.qs.length} questions${st?` · best ${st.bestScore}/${s.qs.length}`:""}`}</span></span>
+       <span class="stars">${starsHTML(st?st.best:0)}</span></button>`}).join("")}</div>
+  <div class="lavabar">START · THE FLOOR IS LAVA</div>
+  <section class="badges"><h2>Badges</h2><div class="badgerow">${STAGES.map(s=>{const on=S.stages[s.id]&&S.stages[s.id].best>0;return `<div class="badge ${on?"on":""}"><i></i>${esc(s.badge)}</div>`}).join("")}</div></section>
+  <a class="big alt" href="../" style="margin-top:16px;text-align:center;text-decoration:none">All science games</a>`;
+  app.querySelectorAll(".plat").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(!unlocked(i)){toast("LOCKED");return}startStage(i)});
+  $("#rep").onclick=()=>{view="report";render()};
+}
+
+function startStage(i){
+  const st=STAGES[i];
+  run={i,stage:st,qs:shuffle(st.qs),k:0,hearts:st.boss?2:3,max:st.boss?2:3,correct:0,streak:0,coins:0,missed:[],answered:false};
+  view="power";render();
+}
+
+function powerView(){
+  const st=run.stage;
+  app.innerHTML = hud() + `<div class="run">
+   <div class="stagehead">STAGE ${st.boss?"BOSS":run.i+1} · ${esc(st.name).toUpperCase()}</div>
+   <div class="card powerup"><span class="tag">POWER-UP · READ THIS FIRST</span><h3>${esc(st.power.title)}</h3><ul>${st.power.pts.map(p=>`<li>${p}</li>`).join("")}</ul></div>
+   <p style="margin:0;color:#fff;font-weight:900;text-shadow:0 2px 0 var(--ink);text-align:center">${run.max} hearts · ${run.qs.length} jumps · 3 in a row = double coins</p>
+   <button class="big" id="go">START RUN</button>
+   <button class="big alt" id="back">Back to map</button></div>`;
+  $("#go").onclick=()=>{view="q";render()};
+  $("#back").onclick=()=>{view="map";render()};
+  $("#rep").onclick=()=>{view="report";render()};
+}
+
+function qView(){
+  const q=run.qs[run.k]; const st=run.stage;
+  if(!q._c) q._c=shuffle([q.a,...q.w]);
+  const pct=Math.round(run.k/run.qs.length*100);
+  app.innerHTML = hud(`<div class="chip"><span class="hearts">${heartsHTML(run.hearts,run.max)}</span></div>`) + `<div class="run">
+    <div class="stagehead">STAGE ${st.boss?"BOSS":run.i+1} · JUMP ${run.k+1} OF ${run.qs.length}</div>
+    <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+    <div class="card" id="qc">${q.sc?`<p class="scene">${esc(q.sc)}</p>`:""}<h3>${esc(q.q)}</h3></div>
+    ${run.streak>=3?`<span class="streak">STREAK ×${run.streak} · DOUBLE COINS</span>`:""}
+    <div class="choices">${q._c.map((c,j)=>`<button class="choice" data-j="${j}">${esc(c)}</button>`).join("")}</div>
+    <div id="fb"></div></div>`;
+  app.querySelectorAll(".choice").forEach(b=>b.onclick=()=>answer(+b.dataset.j));
+  $("#rep").onclick=()=>{view="report";render()};
+}
+
+function answer(j){
+  if(run.answered)return; run.answered=true;
+  const q=run.qs[run.k]; const pick=q._c[j]; const ok=pick===q.a;
+  app.querySelectorAll(".choice").forEach((b,i)=>{b.disabled=true;const c=q._c[i];if(c===q.a)b.classList.add("right");else if(i===j)b.classList.add("wrong");else b.classList.add("dim")});
+  if(ok){run.correct++;run.streak++;const gain=run.streak>=3?20:10;run.coins+=gain;S.coins+=gain;toast(`+${gain}`)}
+  else{run.streak=0;run.hearts--;run.missed.push(q.id);S.missed[q.id]=(S.missed[q.id]||0)+1;buzz();
+    const qc=$("#qc");qc.classList.remove("shake");void qc.offsetWidth;qc.classList.add("shake");
+    const hs=app.querySelector(".hearts");if(hs)hs.innerHTML=heartsHTML(run.hearts,run.max)}
+  save();
+  const hud0=app.querySelector(".hud .chip");if(hud0)hud0.innerHTML=`<i class="coin"></i>${S.coins}`;
+  const dead=run.hearts<=0; const last=run.k===run.qs.length-1;
+  $("#fb").innerHTML=`<div class="feedback ${ok?"ok":"no"}"><b>${ok?["NAILED IT","CLEAN JUMP","EZ","LET'S GO"][Math.floor(Math.random()*4)]:"OOF"}</b>
+    ${ok?"":`<p><strong>Answer:</strong> ${esc(q.a)}</p>`}<p>${esc(q.ex)}</p>
+    <button class="big" id="nx">${dead?"FELL IN THE LAVA…":last?"FINISH STAGE":"NEXT JUMP"}</button></div>`;
+  $("#nx").onclick=()=>{ if(dead){finish(false)} else if(last){finish(true)} else {run.k++;run.answered=false;render()} };
+  $("#fb").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
+}
+
+function finish(cleared){
+  const st=run.stage; const rec=S.stages[st.id]||{best:0,bestScore:0,attempts:0,clears:0};
+  rec.attempts++;
+  let stars=0;
+  if(cleared){rec.clears++; stars = run.hearts===run.max?3:(run.hearts>=run.max-1&&run.max>2?2:1); if(stars>rec.best)rec.best=stars; if(run.correct>rec.bestScore)rec.bestScore=run.correct}
+  rec.last=Date.now(); S.stages[st.id]=rec;
+  const entry={at:new Date().toISOString(),stage:st.id,stageName:st.name,correct:run.correct,total:run.qs.length,cleared,stars,missed:run.missed.slice()};
+  S.log.unshift(entry); S.log=S.log.slice(0,60); save();
+  if(DB){DB.collection("runs").add(entry).catch(()=>{})}
+  run.stars=stars; run.cleared=cleared; view="end"; render();
+}
+
+function endView(){
+  const st=run.stage; const i=run.i; const next=STAGES[i+1];
+  const missedQs=run.missed.map(id=>st.qs.find(q=>q.id===id));
+  app.innerHTML = hud() + `<div class="run"><div class="card result">
+    ${run.cleared?`<div class="avatar jump"><i class="h"></i><i class="b"></i><i class="l"></i></div><h2>STAGE CLEARED!</h2><div class="stars">${starsHTML(run.stars)}</div>
+      <p>${run.correct}/${run.qs.length} correct · +${run.coins} coins<br><strong>Badge: ${esc(st.badge)}</strong></p>`
+     :`<h2>BACK TO CHECKPOINT</h2><p>You ran out of hearts on jump ${run.k+1}. ${run.correct} correct, +${run.coins} coins kept.<br>Read the Power-Up again, then retry. You'll get it.</p>`}
+    <div class="btnrow">
+      ${run.cleared&&next?`<button class="big" id="nextst">NEXT: ${esc(next.name).toUpperCase()}</button>`:""}
+      <button class="big ${run.cleared&&next?"alt":""}" id="again">${run.cleared?"Replay for 3 stars":"RETRY STAGE"}</button>
+      <button class="big alt" id="map">Map</button></div></div>
+    ${missedQs.length?`<div class="panel"><h2>Review these</h2>${missedQs.map(q=>`<div class="miss">${esc(q.q)}<small>✓ ${esc(q.a)}</small></div>`).join("")}</div>`:""}</div>`;
+  if($("#nextst"))$("#nextst").onclick=()=>startStage(i+1);
+  $("#again").onclick=()=>startStage(i);
+  $("#map").onclick=()=>{view="map";render()};
+  $("#rep").onclick=()=>{view="report";render()};
+}
+
+async function reportView(){
+  const allQ={};STAGES.forEach(s=>s.qs.forEach(q=>allQ[q.id]={...q,stage:s.name}));
+  const tough=Object.entries(S.missed).sort((a,b)=>b[1]-a[1]).slice(0,8).filter(([id])=>allQ[id]);
+  const fmt=t=>{try{return new Date(t).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}catch(e){return t}};
+  app.innerHTML = hud() + `<div class="run">
+   <div class="stagehead">PROGRESS REPORT</div>
+   <div class="panel"><h2>Stages</h2><div class="tablewrap"><table><thead><tr><th>Stage</th><th>Stars</th><th>Best</th><th>Tries</th><th>Last</th></tr></thead><tbody>
+   ${STAGES.map(s=>{const r=S.stages[s.id];return `<tr><td>${esc(s.name)}</td><td><span class="stars">${starsHTML(r?r.best:0)}</span></td><td>${r?`${r.bestScore}/${s.qs.length}`:"—"}</td><td>${r?r.attempts:0}</td><td>${r&&r.last?fmt(r.last):"—"}</td></tr>`}).join("")}
+   </tbody></table></div><p class="note">Progress is saved in this browser on this device. ${S.log.length} runs played, ${S.coins} coins.</p></div>
+   <div class="panel"><h2>Keeps missing</h2>${tough.length?tough.map(([id,n])=>{const q=allQ[id];return `<div class="miss"><b>${esc(q.stage)}</b> · missed ${n}×<br>${esc(q.q)}<small>✓ ${esc(q.a)}</small></div>`}).join(""):`<p class="note">Nothing missed yet. Play a stage and tricky questions show up here.</p>`}</div>
+   <button class="big alt" id="map">Back to map</button></div>`;
+  $("#map").onclick=()=>{view="map";render()};
+  $("#rep").onclick=()=>{};
+}
+
+render();
+</script>
+
+
+</body>
+</html>

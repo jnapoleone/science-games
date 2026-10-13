@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Science Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800;900&display=swap">
+<style>
+/* Same sky-obby look as the games: a stack of floating platforms, one per game. */
+:root{
+  --sky:#7cc7ff; --sky-deep:#3d9be9; --ink:#14213d; --paper:#ffffff;
+  --grass:#2fd36b; --dirt:#a8642d; --lock:#9fb3c8; --muted:#5a6b85;
+  --display:"Bungee","Arial Black",Impact,system-ui,sans-serif;
+  --body:"Nunito",ui-rounded,"Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;color:var(--ink);font-family:var(--body);font-weight:600;font-size:16px;
+  background:var(--sky) linear-gradient(180deg,var(--sky-deep) 0%,var(--sky) 55%,#b9e3ff 100%) fixed;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:24px 40px;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,10vw,52px);line-height:.95;margin:0;text-align:center;color:var(--paper);
+  text-shadow:0 4px 0 var(--ink),3px 0 0 var(--ink),-3px 0 0 var(--ink),0 -3px 0 var(--ink),3px 4px 0 var(--ink),-3px 4px 0 var(--ink)}
+.sub{margin:0 auto;max-width:34ch;text-align:center;font-weight:800;background:rgba(255,255,255,.75);border-radius:10px;padding:6px 10px}
+.game{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-decoration:none;color:inherit}
+.block{width:58px;height:58px;border:3px solid var(--ink);border-radius:8px;box-shadow:0 5px 0 var(--ink);
+  background:linear-gradient(var(--grass) 0 38%,var(--dirt) 38% 100%);display:grid;place-items:center;
+  font-family:var(--display);font-size:20px;color:var(--paper);text-shadow:0 2px 0 var(--ink)}
+.meta{background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:10px 12px;box-shadow:0 4px 0 var(--ink);min-width:0}
+.meta b{display:block;font-family:var(--display);font-weight:400;font-size:16px}
+.meta span{display:block;font-size:14px;color:var(--muted);font-weight:800}
+.game:focus-visible .meta{outline:3px solid var(--ink);outline-offset:3px}
+.game:active .block{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.soon .block{background:var(--lock)}
+.soon .meta{opacity:.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SCIENCE<br>GAMES</h1>
+  <p class="sub">Grade 9 Science (SNC1W). Pick a unit and climb.</p>
+  <a class="game" href="chemistry/">
+    <span class="block">U1</span>
+    <span class="meta"><b>Chemistry Obby</b><span>Unit 1 · 8 stages + boss · 84 questions</span></span>
+  </a>
+  <div class="game soon" aria-disabled="true">
+    <span class="block">U2</span>
+    <span class="meta"><b>Next unit</b><span>Coming when the unit starts</span></span>
+  </div>
+</div>
+</body>
+</html>
