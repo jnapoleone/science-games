@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Electricity Obby</title>
+</head>
+<body>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800;900&display=swap">
+<style>
+/* Same sky-obby look as the Chemistry Obby. Single committed bright game look; every color is explicit. */
+:root{
+  --sky:#7cc7ff; --sky-deep:#3d9be9; --ink:#14213d; --paper:#ffffff;
+  --grass:#2fd36b; --grass-dark:#15a24b; --dirt:#a8642d; --dirt-dark:#7a4519;
+  --lava:#ff5a36; --lava-dark:#d63c1c; --coin:#ffc83d; --coin-dark:#e09a00;
+  --volt:#ffe14d; --volt-dark:#d9a400;
+  --lock:#9fb3c8; --good:#18b85a; --bad:#ef3b2d; --panel:#f3f8ff; --muted:#5a6b85;
+  --display:"Bungee", "Arial Black", Impact, system-ui, sans-serif;
+  --body:"Nunito", ui-rounded, "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:600;font-size:16px;
+  background-image:linear-gradient(180deg,var(--sky-deep) 0%,var(--sky) 55%,#b9e3ff 100%);background-attachment:fixed;min-height:100%}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:12px 40px;min-height:100%;position:relative}
+.cloud{position:fixed;background:#fff;opacity:.85;pointer-events:none;z-index:0;
+  box-shadow:24px 0 0 #fff, 48px 0 0 #fff, 24px -16px 0 #fff}
+.c1{top:90px;left:-10px;width:24px;height:16px}
+.c2{top:260px;right:60px;width:24px;height:16px}
+.c3{top:520px;left:40px;width:24px;height:16px;opacity:.6}
+@media (prefers-reduced-motion:no-preference){.c1{animation:drift 38s linear infinite}.c2{animation:drift 52s linear infinite reverse}}
+@keyframes drift{from{transform:translateX(-40px)}to{transform:translateX(60vw)}}
+main{position:relative;z-index:1}
+
+/* HUD */
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:8px;align-items:center;justify-content:space-between;padding-block:8px}
+.chip{display:flex;align-items:center;gap:6px;background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:4px 10px;
+  font-family:var(--display);font-size:15px;box-shadow:0 4px 0 var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.coin{width:16px;height:16px;border-radius:50%;background:var(--coin);border:3px solid var(--coin-dark);flex:none}
+.hearts{display:flex;gap:3px}
+.heart{width:18px;height:16px;position:relative;flex:none}
+.heart::before{content:"";position:absolute;inset:0;background:var(--lava);
+  clip-path:polygon(0 25%,25% 0,50% 20%,75% 0,100% 25%,100% 50%,50% 100%,0 50%)}
+.heart.gone::before{background:#c9d3df}
+.hudbtns{display:flex;gap:6px}
+.iconbtn{background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:4px 9px;font-family:var(--display);font-size:12px;box-shadow:0 4px 0 var(--ink)}
+.iconbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.iconbtn.volt{background:var(--volt)}
+
+/* Title */
+.logo{text-align:center;margin:10px 0 6px}
+.logo h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,10vw,50px);line-height:.95;margin:0;color:var(--paper);
+  text-shadow:0 4px 0 var(--ink),3px 0 0 var(--ink),-3px 0 0 var(--ink),0 -3px 0 var(--ink),3px 4px 0 var(--ink),-3px 4px 0 var(--ink);letter-spacing:1px}
+.logo p{margin:10px auto 0;max-width:34ch;font-weight:800;color:var(--ink);background:rgba(255,255,255,.75);border-radius:10px;padding:6px 10px;text-wrap:balance}
+
+/* Mission plan */
+.missions{margin-top:16px;background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:12px;box-shadow:0 6px 0 var(--ink)}
+.missions h2{font-family:var(--display);font-weight:400;font-size:16px;margin:0 0 4px}
+.countdown{font-weight:900;color:var(--lava-dark);margin:0 0 10px;font-size:14px}
+.mission{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;border:2px solid #dbe3ee;border-radius:10px;padding:8px 10px;margin-top:8px}
+.mission .day{font-family:var(--display);font-size:11px;background:var(--lock);color:var(--paper);border-radius:6px;padding:4px 6px;text-align:center;min-width:52px;text-shadow:0 1px 0 var(--ink)}
+.mission b{display:block;font-weight:900;font-size:15px}
+.mission span{display:block;font-size:13px;color:var(--muted);font-weight:800;line-height:1.35}
+.mission.today{border:3px solid var(--ink);background:#fff8dc}
+.mission.today .day{background:var(--lava)}
+.mission.done .day{background:var(--good)}
+.mission.done b::after{content:" ✓";color:var(--good)}
+.mbar{height:8px;border-radius:4px;background:#e3e9f2;margin-top:6px;overflow:hidden}
+.mbar i{display:block;height:100%;background:var(--grass)}
+.mgo{margin-top:8px;font-family:var(--display);font-size:13px;border:3px solid var(--ink);border-radius:9px;padding:6px 10px;background:var(--grass);color:var(--paper);text-shadow:0 1px 0 var(--ink);box-shadow:0 3px 0 var(--ink)}
+.mgo:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+
+/* Map */
+.map{display:flex;flex-direction:column-reverse;gap:14px;margin-top:18px}
+.zone{font-family:var(--display);font-size:12px;color:var(--paper);text-shadow:0 2px 0 var(--ink);letter-spacing:.5px;text-align:center;
+  background:rgba(20,33,61,.35);border-radius:8px;padding:5px 8px}
+.plat{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;width:86%;text-align:left;border:0;padding:0;background:none}
+.plat.r{margin-left:auto}
+.plat .block{width:58px;height:58px;flex:none;border:3px solid var(--ink);border-radius:8px;position:relative;
+  background:linear-gradient(var(--grass) 0 38%,var(--dirt) 38% 100%);box-shadow:0 5px 0 var(--ink);
+  display:grid;place-items:center;font-family:var(--display);font-size:22px;color:var(--paper);text-shadow:0 2px 0 var(--ink)}
+.plat .block::after{content:"";position:absolute;left:6px;right:6px;bottom:6px;height:6px;background:var(--dirt-dark);opacity:.5;border-radius:2px}
+.plat.boss .block{background:linear-gradient(#ff8a3d 0 38%,var(--lava-dark) 38% 100%)}
+.plat.locked .block{background:var(--lock);filter:saturate(.3)}
+.plat.focus .block{outline:4px dashed var(--volt);outline-offset:3px}
+.plat .meta{background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:8px 10px;box-shadow:0 4px 0 var(--ink);min-width:0}
+.plat .meta b{display:block;font-family:var(--display);font-weight:400;font-size:15px;line-height:1.15}
+.plat .meta span{display:block;font-size:13px;color:var(--muted);font-weight:800}
+.plat.locked .meta{opacity:.7}
+.stars{display:flex;gap:2px}
+.star{width:16px;height:16px;background:#cdd6e2;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.star.on{background:var(--coin)}
+.plat:not(.locked):active .block{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.lavabar{margin-top:18px;height:34px;border:3px solid var(--ink);border-radius:8px;
+  background:repeating-linear-gradient(135deg,var(--lava) 0 14px,#ff7a4d 14px 28px);box-shadow:0 4px 0 var(--ink);
+  display:grid;place-items:center;font-family:var(--display);color:var(--paper);font-size:13px;text-shadow:0 2px 0 var(--ink)}
+@media (prefers-reduced-motion:no-preference){.lavabar{animation:lava 2s linear infinite;background-size:40px 40px}}
+@keyframes lava{to{background-position:40px 0}}
+.badges{margin-top:20px;background:var(--paper);border:3px solid var(--ink);border-radius:12px;padding:12px;box-shadow:0 5px 0 var(--ink)}
+.badges h2,.panel h2{font-family:var(--display);font-weight:400;font-size:16px;margin:0 0 8px}
+.badgerow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.badge{border:2px dashed var(--lock);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;font-weight:900;line-height:1.15;color:var(--muted);min-width:0}
+.badge i{display:block;width:30px;height:30px;margin:0 auto 4px;border-radius:6px;background:var(--lock);border:2px solid var(--ink);transform:rotate(45deg) scale(.8)}
+.badge.on{border:2px solid var(--ink);color:var(--ink);background:#fff8dc}
+.badge.on i{background:var(--coin)}
+.blitz{margin-top:16px;display:block;width:100%;text-align:left;background:var(--volt);border:3px solid var(--ink);border-radius:14px;padding:12px 14px;box-shadow:0 6px 0 var(--volt-dark),0 6px 0 3px var(--ink)}
+.blitz b{display:block;font-family:var(--display);font-weight:400;font-size:17px}
+.blitz span{display:block;font-size:14px;font-weight:800}
+.blitz:active{transform:translateY(4px)}
+
+/* Run screen */
+.run{display:flex;flex-direction:column;gap:12px}
+.progress{height:16px;border:3px solid var(--ink);border-radius:8px;background:var(--paper);overflow:hidden;box-shadow:0 3px 0 var(--ink)}
+.progress i{display:block;height:100%;background:var(--grass);border-right:3px solid var(--ink);transition:width .3s}
+.stagehead{font-family:var(--display);font-size:13px;color:var(--paper);text-shadow:0 2px 0 var(--ink);letter-spacing:.5px}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:16px;box-shadow:0 6px 0 var(--ink)}
+.card .tag{display:inline-block;font-family:var(--display);font-size:11px;background:var(--ink);color:var(--paper);border-radius:6px;padding:3px 7px;margin-bottom:8px;letter-spacing:.5px}
+.card .scene{background:var(--panel);border-left:5px solid var(--sky-deep);border-radius:6px;padding:8px 10px;margin:0 0 10px;font-size:15px;font-style:italic}
+.card h3{margin:0;font-size:19px;line-height:1.3;font-weight:900;text-wrap:balance}
+.choices{display:grid;gap:10px}
+.choice{display:block;width:100%;text-align:left;background:var(--paper);border:3px solid var(--ink);border-radius:12px;padding:12px 14px;
+  font-weight:800;font-size:16px;line-height:1.3;box-shadow:0 4px 0 var(--ink);min-height:52px}
+.choice:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.choice.right{background:#c9f7da;border-color:var(--good);box-shadow:0 4px 0 var(--good)}
+.choice.wrong{background:#ffd9d4;border-color:var(--bad);box-shadow:0 4px 0 var(--bad)}
+.choice[disabled]{cursor:default}
+.choice.dim{opacity:.55}
+.feedback{border:3px solid var(--ink);border-radius:14px;padding:14px;box-shadow:0 6px 0 var(--ink)}
+.feedback.ok{background:#e4fbec}
+.feedback.no{background:#fff0ec}
+.feedback b{font-family:var(--display);font-weight:400;font-size:17px;display:block;margin-bottom:4px}
+.feedback p{margin:0 0 12px;line-height:1.4}
+.feedback .work{font-variant-numeric:tabular-nums;background:rgba(255,255,255,.7);border-radius:8px;padding:8px 10px;white-space:pre-line}
+.big{display:block;width:100%;font-family:var(--display);font-size:18px;border:3px solid var(--ink);border-radius:12px;padding:12px;
+  background:var(--grass);color:var(--paper);text-shadow:0 2px 0 var(--ink);box-shadow:0 5px 0 var(--grass-dark),0 5px 0 3px var(--ink)}
+.big:active{transform:translateY(4px);box-shadow:0 1px 0 var(--grass-dark),0 1px 0 3px var(--ink)}
+.big.alt{background:var(--paper);color:var(--ink);text-shadow:none;box-shadow:0 5px 0 var(--ink)}
+.powerup .tag{background:var(--coin-dark)}
+.powerup ul{margin:8px 0 0;padding-left:20px;line-height:1.45}
+.powerup li{margin-bottom:4px}
+.powerup h3{font-family:var(--display);font-weight:400;font-size:20px}
+.powerup .ex{margin-top:10px;background:var(--panel);border:2px dashed var(--sky-deep);border-radius:10px;padding:8px 10px;font-size:15px;line-height:1.45}
+.powerup .ex b{font-family:var(--display);font-weight:400;font-size:12px;display:block;margin-bottom:2px;color:var(--sky-deep)}
+.streak{font-family:var(--display);font-size:13px;color:var(--ink);background:var(--coin);border:3px solid var(--ink);border-radius:8px;padding:2px 8px;align-self:center}
+.toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:20;font-family:var(--display);font-size:22px;color:var(--paper);
+  text-shadow:0 3px 0 var(--ink),2px 0 0 var(--ink),-2px 0 0 var(--ink);pointer-events:none;white-space:nowrap}
+@media (prefers-reduced-motion:no-preference){.toast{animation:pop 1s ease-out forwards}.shake{animation:shake .35s}}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+
+/* Cheat card */
+.cheat table td:first-child{font-weight:900;white-space:nowrap}
+.cheat .rules{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.cheat .rules div{border:2px solid var(--ink);border-radius:10px;padding:8px;font-size:14px;line-height:1.45}
+.cheat .rules b{font-family:var(--display);font-weight:400;font-size:13px;display:block}
+
+/* End screens + report */
+.result{text-align:center}
+.result h2{font-family:var(--display);font-weight:400;font-size:28px;margin:4px 0 8px}
+.result .stars{justify-content:center;gap:6px;margin:6px 0 10px}
+.result .star{width:40px;height:40px}
+.result p{margin:0 0 14px;line-height:1.45}
+.btnrow{display:grid;gap:10px}
+.panel{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:14px;box-shadow:0 6px 0 var(--ink)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 4px;border-bottom:2px solid #e3e9f2;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.miss{border-left:5px solid var(--lava);background:var(--panel);border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:14px;line-height:1.35}
+.miss.fixed{border-left-color:var(--good)}
+.miss small{display:block;color:var(--good);font-weight:900;margin-top:4px}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.4}
+.avatar{width:54px;height:70px;margin:0 auto 6px;position:relative}
+.avatar .h{position:absolute;left:12px;top:0;width:30px;height:28px;background:#ffd23f;border:3px solid var(--ink);border-radius:4px}
+.avatar .h::before,.avatar .h::after{content:"";position:absolute;top:9px;width:5px;height:6px;background:var(--ink)}
+.avatar .h::before{left:6px}.avatar .h::after{right:6px}
+.avatar .b{position:absolute;left:8px;top:30px;width:38px;height:26px;background:var(--sky-deep);border:3px solid var(--ink);border-radius:3px}
+.avatar .b::after{content:"";position:absolute;left:12px;top:3px;width:10px;height:16px;background:var(--volt);clip-path:polygon(60% 0,0 55%,45% 55%,30% 100%,100% 40%,55% 40%)}
+.avatar .l{position:absolute;left:12px;top:56px;width:30px;height:14px;background:var(--grass-dark);border:3px solid var(--ink);border-top:0}
+@media (prefers-reduced-motion:no-preference){.avatar.jump{animation:jump .6s ease-in-out infinite alternate}}
+@keyframes jump{to{transform:translateY(-10px)}}
+</style>
+
+<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+<div class="wrap"><main id="app"></main></div>
+
+<script>
+/* ============ CONTENT: from Mr. Mimna's SNC1W Unit 3 (Electricity) class text + Unit Review ============ */
+/* Calculation answers follow the teacher's rule: formula, substitution, answer with units ("w" field = worked solution). */
+const TEST = new Date(2026,10,16,14,30); // Mon Nov 16, 2026, 2:30 PM
+
+const ZONES = [
+  {id:"z1", name:"ZONE 1 · STATIC", stages:["static","friction","induction"]},
+  {id:"z2", name:"ZONE 2 · CIRCUITS", stages:["circuits","current","voltage"]},
+  {id:"z3", name:"ZONE 3 · POWER", stages:["resistance","ohm","power","sources","cost"]},
+  {id:"zb", name:"BOSS", stages:["boss"]}
+];
+
+const STAGES = [
+/* ---------- ZONE 1 ---------- */
+{ id:"static", name:"Static Electricity", badge:"Spark Starter", lesson:"3.1",
+  power:{title:"Charges & Static", pts:[
+    "Protons <b>+</b> (stuck in the nucleus) · neutrons <b>0</b> · electrons <b>−</b>. <b>Only electrons move.</b>",
+    "<b>Lost</b> electrons → positive. <b>Gained</b> electrons → negative. Equal → neutral.",
+    "Law of electric charges: <b>like charges repel, unlike charges attract</b>. Charged objects also attract <b>neutral</b> ones.",
+    "Why? <b>Induced charge separation</b>: the charged object pushes or pulls electrons in the neutral object, so its near side gets the opposite charge.",
+    "<b>Static electricity</b> = charge imbalance on the surface. <b>Electric discharge</b> = charge jumps fast (a shock, lightning)."],
+   ex:["Quick count","20 protons, 18 electrons → 2 fewer electrons → <b>positive</b>, lost 2."]},
+  qs:[
+  {id:"s1",q:"Which particle can move from one object to another when an object becomes charged?",a:"Electron",w:["Proton","Neutron","Nucleus"],
+   ex:"Protons are held tightly in the nucleus. Electrons are on the outside of the atom, so they're the only ones that transfer."},
+  {id:"s2",q:"An object has 9 protons and 11 electrons. The object is…",a:"Negative",w:["Positive","Neutral","Impossible to tell"],
+   ex:"More electrons than protons means it gained electrons, so it's negative (by 2)."},
+  {id:"s3",q:"An object has 20 protons and 18 electrons. What is it?",a:"Positive: it lost 2 electrons",w:["Negative: it gained 2 electrons","Positive: it gained 2 protons","Neutral"],
+   ex:"Fewer electrons than protons = positive. Protons never change, so it must have LOST 2 electrons."},
+  {id:"s4",q:"An object has 35 protons and 36 electrons. What is it?",a:"Negative: it gained 1 electron",w:["Positive: it lost 1 electron","Neutral","Negative: it lost 1 proton"],
+   ex:"One extra electron → negative, gained 1."},
+  {id:"s5",q:"A negatively charged balloon is brought near a small, neutral piece of paper. The paper will…",a:"Be attracted to the balloon",w:["Be repelled by the balloon","Not move at all","Become permanently positive"],
+   ex:"Induced charge separation: the balloon pushes the paper's electrons to the far side, the near side becomes positive, and opposite charges attract."},
+  {id:"s6",q:"Two negatively charged balloons are held close together. They will…",a:"Repel each other",w:["Attract each other","Do nothing","Become neutral"],
+   ex:"Law of electric charges: like charges repel."},
+  {id:"s7",q:"A negative rod is brought near a metal leaf electroscope without touching it. What do the leaves do?",a:"Spread apart, because both leaves get the same charge",w:["Stay closed, because nothing touched it","Pull together, because they get opposite charges","Spread apart, because protons move into them"],
+   ex:"The negative rod pushes electrons down into the leaves. Both leaves are now negative, so they repel and spread apart. Remove the rod and they fall back."},
+  {id:"s8",q:"Static electricity is…",a:"An imbalance of electric charge on the surface of an object",w:["A steady flow of electrons through a wire","Charge that only protons carry","Electricity made by a battery"],
+   ex:"Static means “not moving.” The extra charge sits on the surface until it gets a path to escape."},
+  {id:"s9",sc:"You walk across a carpet in socks, reach for a metal doorknob and feel a zap.",q:"What causes the zap?",a:"An electric discharge: extra electrons jump from you to the knob",w:["Protons jump from the knob to you","The doorknob creates new electrons","Current from the wall wiring"],
+   ex:"Walking on the carpet builds up static charge on you. Near the metal, the electrons jump across the gap fast: that's an electric discharge."}
+  ]},
+{ id:"friction", name:"Charging by Friction", badge:"Friction Fighter", lesson:"3.2",
+  power:{title:"The Electrostatic Series", pts:[
+    "<b>Charging by friction</b>: two different neutral materials rub together and electrons transfer from one to the other.",
+    "The series lists materials by how strongly they <b>pull on electrons</b>. Lower = stronger pull.",
+    "Rule: material <b>LOWER</b> on the list gains electrons → <b>negative</b>. Material <b>HIGHER</b> loses electrons → <b>positive</b>.",
+    "Order (top → bottom): human skin, rabbit fur, acetate, <b>glass</b>, <b>human hair</b>, nylon, <b>wool</b>, cat fur, <b>silk</b>, paper, <b>cotton</b>, wood, <b>amber</b>, <b>rubber balloon</b>, vinyl, polyester, <b>ebonite</b>.",
+    "Further apart on the list = <b>bigger charge</b>. Electrons are moved, never created."],
+   ex:["Example","Hair + balloon: the balloon is lower → balloon <b>−</b>, hair <b>+</b>."]},
+  qs:[
+  {id:"f1",q:"When two materials are rubbed together, the material LOWER on the electrostatic series…",a:"Gains electrons and becomes negative",w:["Loses electrons and becomes positive","Gains protons and becomes positive","Stays neutral"],
+   ex:"Lower on the list = stronger pull on electrons. It grabs electrons and becomes negative."},
+  {id:"f2",q:"You rub a rubber balloon on your hair. What charges do they get?",a:"Balloon negative, hair positive",w:["Balloon positive, hair negative","Both negative","Both positive"],
+   ex:"Rubber balloon is lower on the series than human hair, so the balloon takes electrons (−) and your hair loses them (+)."},
+  {id:"f3",q:"Wool is rubbed with ebonite. What charges do they get?",a:"Wool positive, ebonite negative",w:["Wool negative, ebonite positive","Both negative","Both stay neutral"],
+   ex:"Ebonite is at the very bottom of the list, so it gains electrons and becomes negative."},
+  {id:"f4",q:"Glass is rubbed with silk. What charges do they get?",a:"Glass positive, silk negative",w:["Glass negative, silk positive","Both positive","Both negative"],
+   ex:"Silk is lower than glass, so silk takes electrons (−) and the glass loses them (+). This is Example 1 in the class text."},
+  {id:"f5",q:"Which pair gives the LARGEST charge: wool & ebonite, glass & cotton, or hair & balloon?",a:"Wool and ebonite",w:["Glass and cotton","Hair and balloon","They all give the same charge"],
+   ex:"Wool and ebonite are the furthest apart on the series. Further apart = bigger charge."},
+  {id:"f6",sc:"Material Q becomes negative when rubbed with silk, but positive when rubbed with amber.",q:"Where must Q be on the electrostatic series?",a:"Between silk and amber, like cotton",w:["Above silk, like glass","Below amber, like ebonite","At the very top, like human skin"],
+   ex:"Negative with silk → Q is below silk. Positive with amber → Q is above amber. So it's between them: paper, cotton or wood."},
+  {id:"f7",sc:"A Grade 7 student says, “When you rub a balloon on your hair, the balloon makes new negative charges.”",q:"What's wrong with that?",a:"No charge is made: electrons just move from the hair to the balloon",w:["Nothing, the balloon does make new charges","The balloon makes new positive charges","Protons move from the balloon to the hair"],
+   ex:"Charge is never created or destroyed. Every electron the hair loses, the balloon gains."},
+  {id:"f8",q:"Why do you get more static shocks on dry winter days than on humid summer days?",a:"Dry air lets charge build up; moisture in humid air lets it leak away",w:["Cold weather makes new electrons","Summer air is full of protons","Winter clothes are better conductors"],
+   ex:"Water in humid air helps carry extra charge away, so it can't build up. Dry winter air lets charge pile up until you get zapped."},
+  {id:"f9",q:"How does an electrostatic duster pick up dust?",a:"Sweeping charges it by friction, and the charge attracts the dust",w:["It is sticky","It blows the dust away with air","It is magnetic"],
+   ex:"Sweeping rubs the duster, which charges it by friction. Charged objects attract neutral dust (induced charge separation)."}
+  ]},
+{ id:"induction", name:"Conduction & Induction", badge:"Ground Control", lesson:"3.3",
+  power:{title:"Touch, Don't Touch, Ground", pts:[
+    "<b>Conduction</b> (touching): the neutral object ends up with the <b>SAME</b> charge as the charged object.",
+    "Electrons move from the <b>more negative</b> object to the <b>more positive</b> one. Identical objects end with the <b>average</b>: (charge 1 + charge 2) ÷ 2.",
+    "<b>Grounding</b>: connecting to the Earth, a huge supply of electrons. Extra electrons flow into the ground; missing electrons come up from it.",
+    "<b>Induction</b> (not touching): bring the rod near → ground the object → remove the ground → remove the rod. The object ends with the <b>OPPOSITE</b> charge.",
+    "<b>Conductors</b> let electrons move easily (copper, aluminum, silver). <b>Insulators</b> don't (rubber, plastic, glass, wood)."],
+   ex:["Example","Rod X +8 touches identical rod Y −4. (+8 + −4) ÷ 2 = <b>+2 each</b>. Electrons move Y → X (Y was more negative)."]},
+  qs:[
+  {id:"i1",q:"A neutral object that is charged by conduction ends up with…",a:"The same charge as the object that touched it",w:["The opposite charge to the object that touched it","No charge","A charge only on the side facing the object"],
+   ex:"Conduction = contact. Some of the extra charge spreads onto the neutral object, so it gets the same sign."},
+  {id:"i2",sc:"Rod X has a charge of +6. An identical rod Y has a charge of −10. They touch and are separated.",q:"What is the final charge on each rod?",a:"−2 each",w:["+6 and −10 (no change)","−4 each","+8 each"],
+   ex:"Average: (+6 + −10) ÷ 2 = −4 ÷ 2 = −2. Both rods end at −2.",
+   w2:"(+6) + (−10) = −4\n−4 ÷ 2 = −2 on each rod"},
+  {id:"i3",sc:"Rod X is +6, identical rod Y is −10. They touch.",q:"Which way do the electrons move?",a:"From Y to X",w:["From X to Y","Protons move from X to Y","Nothing moves"],
+   ex:"Electrons always go from the more negative object (Y, −10) to the more positive one (X, +6)."},
+  {id:"i4",sc:"Three identical spheres: A = +18, B = −6, C = 0. A touches B, then B touches C, then A touches C.",q:"After the FIRST touch (A with B), what are A and B?",a:"+6 each",w:["+12 each","+24 each","−6 each"],
+   ex:"(+18 + −6) ÷ 2 = +12 ÷ 2 = +6 each."},
+  {id:"i5",sc:"Same spheres: after A touches B, A = +6 and B = +6. Now B touches C (0).",q:"What happens?",a:"Electrons move from C to B, and both end at +3",w:["Electrons move from B to C, and both end at +3","Protons move from B to C, and both end at +6","Both end at +6"],
+   ex:"C (0) is more negative than B (+6), so electrons go C → B. Average: (+6 + 0) ÷ 2 = +3."},
+  {id:"i6",q:"Charging by induction leaves the object with…",a:"The opposite charge to the charging rod",w:["The same charge as the charging rod","No charge at all","A charge that disappears right away"],
+   ex:"Remember: conduction = same, induction = opposite."},
+  {id:"i7",sc:"A positively charged rod is held near a neutral pith ball, and the ball is grounded. Then the ground wire is removed, then the rod.",q:"What happens?",a:"Electrons flow UP from the ground into the ball; it ends up negative",w:["Electrons flow DOWN into the ground; it ends up positive","Protons flow up from the ground; it ends up positive","Nothing flows; it ends up neutral"],
+   ex:"The positive rod attracts electrons, so they come up from the Earth through the wire. Cut the wire and they're trapped: the ball is negative (opposite to the rod)."},
+  {id:"i8",q:"Which material is the best insulator?",a:"Rubber",w:["Copper","Aluminum","Silver"],
+   ex:"Rubber doesn't let electrons move easily. Copper, aluminum and silver are metals, which are good conductors."},
+  {id:"i9",q:"Why are drivers told to touch a metal part of the car before refuelling?",a:"To ground themselves so a spark doesn't jump near the gas fumes",w:["To warm up their hands","To charge the car battery","To make the pump run faster"],
+   ex:"Sliding off the seat charges you up. Touching metal lets the charge go to ground safely, instead of sparking at the nozzle."},
+  {id:"i10",q:"Why are electrical cords made of copper wire covered in plastic?",a:"Copper conducts the current; plastic insulates so it's safe to touch",w:["Plastic conducts the current; copper insulates","Both are insulators","Copper is cheaper than plastic"],
+   ex:"Conductor inside to carry the electrons, insulator outside to keep them from reaching you."}
+  ]},
+
+/* ---------- ZONE 2 ---------- */
+{ id:"circuits", name:"Circuits, AC & DC", badge:"Circuit Builder", lesson:"3.4",
+  power:{title:"Current Electricity", pts:[
+    "Static = electrons <b>gather in one place</b>. Current = a <b>steady, controlled flow</b> through a conductor.",
+    "<b>DC</b> (direct current) flows in <b>one direction</b>. Made by <b>cells and batteries</b>.",
+    "<b>AC</b> (alternating current) keeps <b>switching direction</b>. Made by <b>generating stations</b> → anything plugged into a wall outlet.",
+    "4 parts of a circuit: <b>energy source</b> (pushes electrons) · <b>wires</b> (the path) · <b>load</b> (turns electrical energy into other energy, like a bulb) · <b>switch</b> (opens/closes the path).",
+    "<b>Series</b>: ONE path. One bulb out → all out. <b>Parallel</b>: TWO OR MORE paths. One bulb out → others stay on."],
+   ex:["Memory trick","<b>D</b>C = <b>D</b>irect = one <b>D</b>irection = battery. <b>A</b>C = <b>A</b>lternates = wall outlet."]},
+  qs:[
+  {id:"c1",q:"Which describes direct current (DC)?",a:"Electrons flow in one direction only",w:["Electrons switch direction many times a second","Charge builds up on a surface","Only protons flow"],
+   ex:"DC = Direct = one direction. Cells and batteries make DC."},
+  {id:"c2",q:"Which describes alternating current (AC)?",a:"Electrons keep switching direction",w:["Electrons flow in one direction only","Electrons don't move at all","It only comes from batteries"],
+   ex:"AC = Alternates. Generating stations make AC, and that's what comes out of a wall outlet."},
+  {id:"c3",q:"Which of these produces direct current?",a:"A battery",w:["A hydroelectric station","A wall outlet","A nuclear generating station"],
+   ex:"Cells and batteries make DC. Generating stations (and the outlets they feed) give AC."},
+  {id:"c4",q:"A fridge plugged into the kitchen wall runs on…",a:"AC",w:["DC","Static electricity","Neither"],
+   ex:"Anything running straight off a wall outlet uses AC from the power grid."},
+  {id:"c5",q:"A flashlight and a digital watch both run on…",a:"DC",w:["AC","Static electricity","AC for one, DC for the other"],
+   ex:"Both run on batteries (cells), so both use DC."},
+  {id:"c6",q:"In a circuit, what is the job of the LOAD?",a:"It converts electrical energy into other forms, like light",w:["It pushes the electrons around the circuit","It opens and closes the circuit","It gives the electrons a path"],
+   ex:"Source pushes · wires carry · load uses (bulb, motor, heater) · switch controls."},
+  {id:"c7",q:"Which statement about a parallel circuit is true?",a:"There are two or more paths for electrons",w:["There is only one path for electrons","If one lamp burns out, all the lamps go out","The current is the same in every branch"],
+   ex:"Parallel = branches = more than one path. In SERIES there's one path and one burnt bulb kills them all."},
+  {id:"c8",q:"Two lamps are in series. One burns out. What happens to the other?",a:"It goes out too, because the only path is broken",w:["It gets brighter","It stays the same","It flickers between AC and DC"],
+   ex:"Series has only one path. A burnt-out bulb is a gap, so no electrons can flow anywhere."},
+  {id:"c9",q:"A string of holiday lights stays on when one bulb is removed. The bulbs are wired in…",a:"Parallel",w:["Series","DC only","Static"],
+   ex:"The other bulbs still have their own path, so it must be parallel."},
+  {id:"c10",q:"Static electricity vs current electricity: what's the difference?",a:"Static charge stays in one place; current is a steady flow through a conductor",w:["Static flows in wires; current stays on surfaces","Static is AC; current is DC","There's no difference"],
+   ex:"Static = sits on the surface. Current = keeps moving around a circuit."}
+  ]},
+{ id:"current", name:"Electric Current", badge:"Amp Ace", lesson:"3.5",
+  power:{title:"Current: I = Q ÷ Δt", pts:[
+    "<b>Current (I)</b> = the <b>rate</b> of electron flow past a point, in <b>amperes (A)</b>. Like river current: how much flows by per second.",
+    "Electrons come in bundles: <b>1 coulomb (C) = 6.2 × 10¹⁸ electrons</b>. 1 A = 1 C/s.",
+    "<b>I = Q ÷ Δt</b> · <b>Q = I × Δt</b> · <b>Δt = Q ÷ I</b>. <b>Convert time to SECONDS first!</b>",
+    "<b>Ammeter</b> goes in <b>SERIES</b> (all electrons must pass through it).",
+    "Series: current is the <b>same everywhere</b>. Parallel: branch currents <b>add up</b> to the source current."],
+   ex:["Worked example","Toaster: 900.0 C in 1.5 min. Δt = 1.5 × 60 = 90 s<br>I = Q ÷ Δt = 900.0 C ÷ 90 s = <b>10 A</b>"]},
+  qs:[
+  {id:"a1",q:"Electric current is…",a:"The rate of electron flow past a point in a circuit",w:["The speed electricity moves at","The energy each electron carries","How much a wire resists electrons"],
+   ex:"Current is HOW MUCH charge goes by each second (like how much water flows past a spot in a river), not how fast it travels. Measured in amperes."},
+  {id:"a2",q:"One coulomb of charge is equal to…",a:"6.2 × 10¹⁸ electrons",w:["1 electron","3 600 000 J","1 J/s"],
+   ex:"A coulomb is a giant bundle of electrons: 6.2 × 10¹⁸ of them."},
+  {id:"a3",q:"A toaster uses 900.0 C of charge in 1.5 min. What is the current?",a:"10 A",w:["600 A","0.10 A","1350 A"],
+   ex:"Convert first: 1.5 min × 60 = 90 s. I = Q ÷ Δt = 900.0 C ÷ 90 s = 10 A. (600 A is what you get if you forget to convert!)",
+   w2:"Δt = 1.5 min × 60 = 90 s\nI = Q ÷ Δt\nI = 900.0 C ÷ 90 s\nI = 10 A"},
+  {id:"a4",q:"A bulb with a current of 0.80 A is left on for 20.0 min. How much charge passes through it?",a:"960 C",w:["16 C","25 C","1500 C"],
+   ex:"Δt = 20.0 × 60 = 1200 s. Q = I × Δt = 0.80 A × 1200 s = 960 C.",
+   w2:"Δt = 20.0 min × 60 = 1200 s\nQ = I × Δt\nQ = 0.80 A × 1200 s\nQ = 960 C"},
+  {id:"a5",q:"How long does it take 132 C to pass through a blender if the current is 5.5 A?",a:"24 s",w:["726 s","0.042 s","137.5 s"],
+   ex:"Δt = Q ÷ I = 132 C ÷ 5.5 A = 24 s.",
+   w2:"Δt = Q ÷ I\nΔt = 132 C ÷ 5.5 A\nΔt = 24 s"},
+  {id:"a6",q:"A toaster draws 7.5 A for 2.0 min. How much charge passes through it?",a:"900 C",w:["15 C","3.75 C","450 C"],
+   ex:"Δt = 2.0 × 60 = 120 s. Q = I × Δt = 7.5 A × 120 s = 900 C.",
+   w2:"Δt = 2.0 min × 60 = 120 s\nQ = I × Δt = 7.5 A × 120 s\nQ = 900 C"},
+  {id:"a7",q:"How many electrons are in 900 C of charge?",a:"5.6 × 10²¹ electrons",w:["900 electrons","6.2 × 10¹⁸ electrons","1.5 × 10¹⁶ electrons"],
+   ex:"Multiply by 6.2 × 10¹⁸: 900 × 6.2 × 10¹⁸ = 5.58 × 10²¹ ≈ 5.6 × 10²¹ electrons.",
+   w2:"electrons = Q × 6.2 × 10¹⁸\n= 900 × 6.2 × 10¹⁸\n= 5.6 × 10²¹ electrons"},
+  {id:"a8",q:"How must an ammeter be connected in a circuit?",a:"In series, so all the electrons flow through it",w:["In parallel, beside the load","Across the battery","It doesn't matter"],
+   ex:"Ammeter = series. (Voltmeter = parallel. That's the next stage.)"},
+  {id:"a9",q:"A series circuit has 3 identical lamps. The current through the battery is 0.3 A. What is the current through each lamp?",a:"0.3 A",w:["0.1 A","0.9 A","0.6 A"],
+   ex:"Series = one path, so the current is the SAME everywhere: 0.3 A through every lamp."},
+  {id:"a10",q:"Three identical lamps are in parallel. The source current is 0.3 A. What is the current through each lamp?",a:"0.1 A",w:["0.3 A","0.9 A","0.03 A"],
+   ex:"Parallel: branch currents add up to the source. Three equal branches: 0.3 A ÷ 3 = 0.1 A each."},
+  {id:"a11",q:"A parallel circuit has a source current of 1.5 A. Branch 1 carries 0.40 A and branch 2 carries 0.65 A. What is the current in branch 3?",a:"0.45 A",w:["1.05 A","2.55 A","0.50 A"],
+   ex:"I(source) = I₁ + I₂ + I₃. So I₃ = 1.5 − 0.40 − 0.65 = 0.45 A.",
+   w2:"I₃ = I(source) − I₁ − I₂\nI₃ = 1.5 A − 0.40 A − 0.65 A\nI₃ = 0.45 A"}
+  ]},
+{ id:"voltage", name:"Potential Difference", badge:"Volt Vaulter", lesson:"3.6",
+  power:{title:"Voltage: V = ΔE ÷ Q", pts:[
+    "<b>Potential difference (voltage, V)</b> = energy per unit of charge, in <b>volts</b>. 1 V = 1 J/C.",
+    "Two beakers: water only flows if one is lifted higher. A <b>battery</b> makes that “height difference” so electrons flow.",
+    "<b>V = ΔE ÷ Q</b> · <b>ΔE = V × Q</b> · <b>Q = ΔE ÷ V</b>.",
+    "<b>Voltmeter</b> goes in <b>PARALLEL</b> (across the load).",
+    "Series: voltages across loads <b>add up</b> to the source. Parallel: every branch gets the <b>same</b> voltage as the source."],
+   ex:["Worked example","6.0 V battery gives 1.5 J. Q = ΔE ÷ V = 1.5 J ÷ 6.0 V = <b>0.25 C</b>"]},
+  qs:[
+  {id:"v1",q:"Potential difference is…",a:"The energy gained or lost by each coulomb of charge",w:["The rate of electron flow","How much a wire opposes current","The number of electrons in a circuit"],
+   ex:"Voltage = joules per coulomb. That's why 1 V = 1 J/C."},
+  {id:"v2",q:"What does a 9 V battery tell you?",a:"Each coulomb of charge gets 9 J of energy",w:["9 coulombs flow each second","The battery has 9 electrons","It lasts 9 hours"],
+   ex:"V = ΔE ÷ Q, so 9 V means 9 J for every 1 C."},
+  {id:"v3",q:"A dry cell gives 105 J of energy to 17.5 C of charge. What is its potential difference?",a:"6.0 V",w:["1837.5 V","0.17 V","122.5 V"],
+   ex:"V = ΔE ÷ Q = 105 J ÷ 17.5 C = 6.0 V.",
+   w2:"V = ΔE ÷ Q\nV = 105 J ÷ 17.5 C\nV = 6.0 V"},
+  {id:"v4",q:"How much energy is used by a 220 V dryer when 18.18 C of charge passes through it?",a:"4000 J (3999.6 J)",w:["12.1 J","238 J","0.083 J"],
+   ex:"ΔE = V × Q = 220 V × 18.18 C = 3999.6 J ≈ 4000 J.",
+   w2:"ΔE = V × Q\nΔE = 220 V × 18.18 C\nΔE = 3999.6 J ≈ 4000 J"},
+  {id:"v5",q:"What charge passes through a 6.0 V battery if the energy is 1.5 J?",a:"0.25 C",w:["9.0 C","4.0 C","7.5 C"],
+   ex:"Q = ΔE ÷ V = 1.5 J ÷ 6.0 V = 0.25 C. (Watch the order: energy ÷ volts.)",
+   w2:"Q = ΔE ÷ V\nQ = 1.5 J ÷ 6.0 V\nQ = 0.25 C"},
+  {id:"v6",q:"A 12 V car battery moves 40 C of charge. How much energy does it give?",a:"480 J",w:["3.3 J","52 J","0.3 J"],
+   ex:"ΔE = V × Q = 12 V × 40 C = 480 J.",
+   w2:"ΔE = V × Q = 12 V × 40 C\nΔE = 480 J"},
+  {id:"v7",q:"How must a voltmeter be connected?",a:"In parallel, across the load",w:["In series with the load","Inside the battery","It doesn't matter"],
+   ex:"Voltmeter = parallel. Ammeter = series. A classic test question!"},
+  {id:"v8",q:"A series circuit has three identical lamps and a 15 V battery. What is the voltage across each lamp?",a:"5 V",w:["15 V","45 V","3 V"],
+   ex:"Series: the lamp voltages add up to the source. Three equal lamps share it: 15 V ÷ 3 = 5 V."},
+  {id:"v9",q:"A parallel circuit has three identical lamps and a 20 V source. What is the voltage across each lamp?",a:"20 V",w:["6.7 V","60 V","10 V"],
+   ex:"Parallel: every branch gets the full source voltage."},
+  {id:"v10",sc:"A series circuit has a 24 V battery and three lamps. Lamp 1 has 6.0 V across it and lamp 2 has 9.5 V.",q:"What is the voltage across lamp 3?",a:"8.5 V",w:["15.5 V","39.5 V","24 V"],
+   ex:"Series: V(source) = V₁ + V₂ + V₃. V₃ = 24 − 6.0 − 9.5 = 8.5 V.",
+   w2:"V₃ = V(source) − V₁ − V₂\nV₃ = 24 V − 6.0 V − 9.5 V\nV₃ = 8.5 V"},
+  {id:"v11",q:"Every outlet in your home gives 120 V. What does that tell you about your home's wiring?",a:"It's wired in parallel: every branch gets the same voltage",w:["It's wired in series","It runs on DC","It has no resistance"],
+   ex:"In parallel, each branch gets the full source voltage. Bonus: one appliance breaking doesn't shut off the others."}
+  ]},
+
+/* ---------- ZONE 3 ---------- */
+{ id:"resistance", name:"Resistance", badge:"Ohm Wrangler", lesson:"3.7",
+  power:{title:"Resistance (Ω)", pts:[
+    "<b>Resistance (R)</b> = how much a material opposes current, in <b>ohms (Ω)</b>. Electrons bump into atoms → slow down → wire warms up.",
+    "Resistance goes UP when the wire is <b>longer</b>, <b>thinner</b> or <b>warmer</b>. It also depends on the <b>material</b> (copper is low).",
+    "<b>Series</b>: just add. R(total) = R₁ + R₂ + R₃ (turnstiles one after another).",
+    "<b>Parallel</b>: 1/R(total) = 1/R₁ + 1/R₂ + … (turnstiles side by side). Don't forget to flip at the end!",
+    "Check: parallel total is <b>always smaller than the smallest resistor</b>."],
+   ex:["Worked example","Three 6 Ω in parallel: 1/R = 1/6 + 1/6 + 1/6 = 3/6 = 0.5<br>R = 1 ÷ 0.5 = <b>2 Ω</b> (smaller than 6 ✓)"]},
+  qs:[
+  {id:"r1",q:"Electrical resistance is…",a:"The ability of a material to oppose the flow of current",w:["A device that makes current","The rate of electron flow","The energy per coulomb"],
+   ex:"Resistance (R) is measured in ohms (Ω). A RESISTOR is a device that has resistance, but resistance itself is the opposing."},
+  {id:"r2",q:"Which change would INCREASE the resistance of a copper wire?",a:"Making it longer",w:["Making it shorter","Making it thicker","Cooling it down"],
+   ex:"Longer = electrons travel through more material. Thicker and cooler both LOWER resistance."},
+  {id:"r3",q:"Why does a wire's resistance go up when it gets warmer?",a:"Its atoms vibrate faster, so electrons collide with them more",w:["The wire gains electrons","The wire gets thicker","Heat removes the protons"],
+   ex:"Hotter atoms jiggle more and get in the electrons' way."},
+  {id:"r4",q:"Resistors of 12 Ω, 18 Ω and 30 Ω are connected in series. What is the equivalent resistance?",a:"60 Ω",w:["5.7 Ω","20 Ω","6480 Ω"],
+   ex:"Series: just add. 12 + 18 + 30 = 60 Ω.",
+   w2:"R(total) = R₁ + R₂ + R₃\n= 12 Ω + 18 Ω + 30 Ω\n= 60 Ω"},
+  {id:"r5",q:"Three identical 6 Ω resistors are connected in PARALLEL. What is the equivalent resistance?",a:"2 Ω",w:["6 Ω","18 Ω","0.5 Ω"],
+   ex:"1/R = 1/6 + 1/6 + 1/6 = 3/6 = 0.5, then flip: R = 1 ÷ 0.5 = 2 Ω. (0.5 is the trap: you forgot to flip!)",
+   w2:"1/R = 1/6 + 1/6 + 1/6 = 0.5\nR = 1 ÷ 0.5\nR = 2 Ω"},
+  {id:"r6",q:"A 12 Ω and an 18 Ω resistor are connected in parallel. What is the equivalent resistance?",a:"7.2 Ω",w:["30 Ω","15 Ω","0.14 Ω"],
+   ex:"1/R = 1/12 + 1/18 = 0.0833 + 0.0556 = 0.1389. R = 1 ÷ 0.1389 = 7.2 Ω. Smaller than 12 Ω ✓.",
+   w2:"1/R = 1/12 + 1/18 = 0.1389\nR = 1 ÷ 0.1389\nR = 7.2 Ω"},
+  {id:"r7",q:"A 4 Ω and a 12 Ω resistor are in parallel. What is the equivalent resistance?",a:"3 Ω",w:["16 Ω","8 Ω","0.33 Ω"],
+   ex:"1/R = 1/4 + 1/12 = 3/12 + 1/12 = 4/12. Flip: R = 12/4 = 3 Ω. Smaller than 4 Ω ✓.",
+   w2:"1/R = 1/4 + 1/12 = 4/12\nR = 12 ÷ 4\nR = 3 Ω"},
+  {id:"r8",q:"Two 10 Ω resistors are in parallel. What is the equivalent resistance?",a:"5 Ω",w:["20 Ω","10 Ω","0.2 Ω"],
+   ex:"1/R = 1/10 + 1/10 = 0.2, R = 1 ÷ 0.2 = 5 Ω. Two equal resistors in parallel = half of one."},
+  {id:"r9",q:"Why is the total resistance in parallel always LESS than the smallest resistor?",a:"Each new branch is an extra path, so more current can get through",w:["Parallel resistors cancel out","Electrons go through every resistor twice","Parallel circuits have no wires"],
+   ex:"Turnstiles side by side: more ways through means people (electrons) flow more easily."},
+  {id:"r10",sc:"A 5 Ω lamp is in series with a 4 Ω lamp and a 2 Ω lamp that are in parallel with each other.",q:"What is the equivalent resistance?",a:"6.3 Ω",w:["11 Ω","1.3 Ω","5.75 Ω"],
+   ex:"Do the parallel pair first: 1/R = 1/4 + 1/2 = 0.75, so R = 1.33 Ω. Then add the series lamp: 5 + 1.33 = 6.3 Ω.",
+   w2:"Parallel pair: 1/R = 1/4 + 1/2 = 0.75\nR = 1 ÷ 0.75 = 1.33 Ω\nTotal: 5 Ω + 1.33 Ω = 6.3 Ω"},
+  {id:"r11",q:"Why are power cords for high-power tools made with thick copper wire?",a:"Thick copper has low resistance, so it carries big currents without overheating",w:["Thick wire has more resistance, which is safer","Copper is an insulator","Thick wire makes the tool lighter"],
+   ex:"Thicker + good conductor = low resistance = less heating."}
+  ]},
+{ id:"ohm", name:"Ohm's Law", badge:"Law Keeper", lesson:"3.8",
+  power:{title:"Ohm's Law: V = I × R", pts:[
+    "<b>V = I × R</b> · <b>I = V ÷ R</b> · <b>R = V ÷ I</b>. Volts, amps, ohms.",
+    "Same resistance, double the voltage → <b>double the current</b>.",
+    "Graph with <b>voltage on y</b>, <b>current on x</b>: the <b>slope (rise ÷ run) = resistance</b>.",
+    "<b>Steeper line = higher resistance.</b>",
+    "Lower resistance → more current at the same voltage."],
+   ex:["Worked example","120 V outlet, 48 Ω heater. I = V ÷ R = 120 V ÷ 48 Ω = <b>2.5 A</b>"]},
+  qs:[
+  {id:"o1",q:"Which equation is Ohm's law?",a:"V = IR",w:["P = VI","I = Q ÷ Δt","V = ΔE ÷ Q"],
+   ex:"V = I × R links voltage, current and resistance."},
+  {id:"o2",q:"A 120 V outlet is connected to a 48 Ω heater. What is the current?",a:"2.5 A",w:["5760 A","0.4 A","168 A"],
+   ex:"I = V ÷ R = 120 V ÷ 48 Ω = 2.5 A.",
+   w2:"I = V ÷ R\nI = 120 V ÷ 48 Ω\nI = 2.5 A"},
+  {id:"o3",q:"A lamp draws 0.30 A from a 6.0 V battery. What is its resistance?",a:"20 Ω",w:["1.8 Ω","0.05 Ω","6.3 Ω"],
+   ex:"R = V ÷ I = 6.0 V ÷ 0.30 A = 20 Ω.",
+   w2:"R = V ÷ I\nR = 6.0 V ÷ 0.30 A\nR = 20 Ω"},
+  {id:"o4",q:"A 15 Ω coil has 0.80 A through it. What is the voltage across it?",a:"12 V",w:["18.75 V","0.053 V","15.8 V"],
+   ex:"V = I × R = 0.80 A × 15 Ω = 12 V.",
+   w2:"V = I × R\nV = 0.80 A × 15 Ω\nV = 12 V"},
+  {id:"o5",q:"A toaster oven has a 24.0 Ω resistor with 5.00 A through it. What is the potential difference?",a:"120 V",w:["4.8 V","29 V","0.21 V"],
+   ex:"V = I × R = 5.00 A × 24.0 Ω = 120 V.",
+   w2:"V = I × R = 5.00 A × 24.0 Ω\nV = 120 V"},
+  {id:"o6",q:"A 9.0 V battery is connected to a 30 Ω resistor. What is the current?",a:"0.30 A",w:["270 A","3.3 A","39 A"],
+   ex:"I = V ÷ R = 9.0 V ÷ 30 Ω = 0.30 A.",
+   w2:"I = V ÷ R = 9.0 V ÷ 30 Ω\nI = 0.30 A"},
+  {id:"o7",q:"For a fixed resistance, what happens to the current if the voltage is doubled?",a:"The current doubles",w:["The current halves","The current stays the same","The current drops to zero"],
+   ex:"I = V ÷ R. Double V with the same R → double I."},
+  {id:"o8",sc:"A student tests a resistor: V = 0, 2.0, 4.0, 6.0, 8.0 V and I = 0, 0.25, 0.50, 0.75, 1.00 A. Voltage goes on the y-axis.",q:"What is the resistance (the slope)?",a:"8.0 Ω",w:["0.125 Ω","2.0 Ω","4.0 Ω"],
+   ex:"Slope = rise ÷ run = 8.0 V ÷ 1.00 A = 8.0 Ω. (0.125 is run ÷ rise, upside down.)",
+   w2:"slope = rise ÷ run\n= 8.0 V ÷ 1.00 A\nR = 8.0 Ω"},
+  {id:"o9",sc:"Same 8.0 Ω resistor.",q:"Predict the current if the voltage is raised to 10 V.",a:"1.25 A",w:["80 A","0.8 A","1.00 A"],
+   ex:"I = V ÷ R = 10 V ÷ 8.0 Ω = 1.25 A."},
+  {id:"o10",q:"On a voltage vs current graph, a second resistor gives a STEEPER line. Its resistance is…",a:"Higher",w:["Lower","The same","Zero"],
+   ex:"Slope = resistance, so steeper = more volts needed per amp = higher resistance."},
+  {id:"o11",q:"A toaster and a phone charger both plug into 120 V. The toaster draws much more current. Which has the lower resistance?",a:"The toaster",w:["The phone charger","They're the same","You can't tell"],
+   ex:"Same voltage, bigger current → smaller resistance (I = V ÷ R)."}
+  ]},
+{ id:"power", name:"Power & Efficiency", badge:"Watt Warrior", lesson:"3.9",
+  power:{title:"Power & Efficiency", pts:[
+    "<b>Power (P)</b> = rate energy is used, in <b>watts (W)</b>. <b>1 W = 1 J/s</b>.",
+    "<b>P = ΔE ÷ Δt</b> (time in seconds) · <b>P = V × I</b>.",
+    "Basketball tickets: revenue = price × tickets sold. Power = voltage (energy per charge) × current (charges per second).",
+    "<b>% efficiency = E(out) ÷ E(in) × 100%</b>. Never more than 100%; the wasted energy is mostly <b>heat</b>.",
+    "Energy in = E(out) ÷ (efficiency as a decimal)."],
+   ex:["Worked example","Generator: 15 000 J in 5.0 min. Δt = 300 s<br>P = 15 000 J ÷ 300 s = <b>50 W</b>"]},
+  qs:[
+  {id:"p1",q:"One watt is equal to one…",a:"Joule per second",w:["Joule per coulomb","Coulomb per second","Kilowatt hour"],
+   ex:"Power = energy ÷ time, so W = J/s. (J/C is a volt; C/s is an amp.)"},
+  {id:"p2",q:"A generator uses 15 000 J of energy in 5.0 min. What is its power?",a:"50 W",w:["3000 W","75 000 W","0.02 W"],
+   ex:"Convert: 5.0 min = 300 s. P = ΔE ÷ Δt = 15 000 J ÷ 300 s = 50 W. (3000 W = forgot to convert.)",
+   w2:"Δt = 5.0 min × 60 = 300 s\nP = ΔE ÷ Δt\nP = 15 000 J ÷ 300 s\nP = 50 W"},
+  {id:"p3",q:"A baseboard heater draws 13.6 A from a 110 V outlet. What is its power?",a:"1496 W",w:["1996 W","8.1 W","123.6 W"],
+   ex:"P = V × I = 110 V × 13.6 A = 1496 W (about 1500 W).",
+   w2:"P = V × I\nP = 110 V × 13.6 A\nP = 1496 W"},
+  {id:"p4",q:"A microwave draws 9.0 A from a 120 V outlet. What is its power?",a:"1080 W",w:["13.3 W","129 W","108 W"],
+   ex:"P = V × I = 120 V × 9.0 A = 1080 W.",
+   w2:"P = V × I = 120 V × 9.0 A\nP = 1080 W"},
+  {id:"p5",q:"Part of a circuit uses 6 W when it draws 3 A. What is the voltage across it?",a:"2 V",w:["18 V","0.5 V","9 V"],
+   ex:"V = P ÷ I = 6 W ÷ 3 A = 2 V."},
+  {id:"p6",q:"A 1500 W kettle runs for 3.0 min. How much energy does it use?",a:"270 000 J",w:["4500 J","500 J","90 000 J"],
+   ex:"Δt = 3.0 × 60 = 180 s. ΔE = P × Δt = 1500 W × 180 s = 270 000 J.",
+   w2:"Δt = 3.0 min × 60 = 180 s\nΔE = P × Δt\nΔE = 1500 W × 180 s\nΔE = 270 000 J"},
+  {id:"p7",q:"A light bulb uses 100 J of electrical energy and gives 35 J of light. What is its efficiency?",a:"35%",w:["65%","286%","3.5%"],
+   ex:"% eff = 35 J ÷ 100 J × 100% = 35%.",
+   w2:"% eff = E(out) ÷ E(in) × 100%\n= 35 J ÷ 100 J × 100%\n= 35%"},
+  {id:"p8",q:"A toaster oven uses 1200 J to produce 850 J of thermal energy. What is its efficiency?",a:"71%",w:["141%","29%","350%"],
+   ex:"850 ÷ 1200 × 100% = 70.8% ≈ 71%.",
+   w2:"% eff = 850 J ÷ 1200 J × 100%\n= 70.8% ≈ 71%"},
+  {id:"p9",q:"A TV that is 83% efficient provides 4600 J of useful energy. How much energy does it use?",a:"5542 J",w:["3818 J","5600 J","38 180 J"],
+   ex:"E(in) = E(out) ÷ 0.83 = 4600 J ÷ 0.83 = 5542 J. (Energy in must be BIGGER than energy out.)",
+   w2:"E(in) = E(out) ÷ efficiency\nE(in) = 4600 J ÷ 0.83\nE(in) = 5542 J"},
+  {id:"p10",sc:"A bulb uses 400 J of electrical energy and gives off 60 J of light.",q:"What is its efficiency, and where does the rest go?",a:"15%; most of the rest is lost as heat",w:["85%; the rest is stored in the bulb","15%; the rest turns into electrons","6.7%; the rest becomes light later"],
+   ex:"60 ÷ 400 × 100% = 15%. The other 340 J mostly becomes heat (that's why old bulbs get hot)."},
+  {id:"p11",q:"Two kettles boil the same water. Kettle A uses 180 000 J and kettle B uses 150 000 J. Which is more efficient?",a:"Kettle B",w:["Kettle A","They're equally efficient","You can't tell"],
+   ex:"Same useful output (boiled water), but B needs less energy in, so B is more efficient."}
+  ]},
+{ id:"sources", name:"Sources of Energy", badge:"Grid Guardian", lesson:"3.10",
+  power:{title:"Where Electricity Comes From", pts:[
+    "<b>Non-renewable</b> = can't be replaced as fast as it's used: <b>fossil fuels</b> (coal, oil, natural gas) and <b>nuclear</b> (uranium).",
+    "<b>Renewable</b> = unlimited or naturally replaced quickly: <b>solar, wind, hydro, geothermal, biomass</b>.",
+    "Most generators spin a <b>coil inside a magnet</b>. Fossil fuels are burned to boil water; the steam spins a turbine.",
+    "Ontario: about <b>half from nuclear</b> (≈52%). Canada: <b>hydro</b> gives more than half (lots of big rivers).",
+    "Solar: clean, but <b>inefficient (10–20%) and expensive</b>. Wind: clean, but <b>unreliable</b>, birds. Hydro: clean and reliable, but needs rivers and dams harm ecosystems. Nuclear: no greenhouse gases, very reliable, but radioactive waste."],
+   ex:["Watch out","Solar is NOT the reliable or cheap option. It only works when the sun's out and the panels are expensive."]},
+  qs:[
+  {id:"e1",q:"Which energy source is non-renewable?",a:"Uranium",w:["Wind","Hydro","Solar"],
+   ex:"Uranium (nuclear) is non-renewable, like coal, oil and natural gas."},
+  {id:"e2",q:"A renewable energy resource is one that…",a:"Is unlimited or replaced naturally in a short time",w:["Can be burned more than once","Was made from ancient plants","Never causes any environmental harm"],
+   ex:"Renewable = nature refills it quickly (sun, wind, flowing water). It's not about reusing the same energy."},
+  {id:"e3",q:"Which source produces the most electricity in Ontario?",a:"Nuclear",w:["Hydro","Solar","Wind"],
+   ex:"About half (≈52% in the class text) of Ontario's electricity is nuclear."},
+  {id:"e4",q:"Which source produces the most electricity in Canada as a whole?",a:"Hydro",w:["Nuclear","Coal","Solar"],
+   ex:"Canada has so many large rivers that hydro supplies more than half its electricity."},
+  {id:"e5",q:"Which is a real disadvantage of solar power?",a:"It's inefficient and expensive to make and maintain",w:["It releases greenhouse gases","It's the most reliable source there is","It uses up uranium"],
+   ex:"Only 10–20% of absorbed sunlight becomes electricity, panels are pricey, and it doesn't work at night."},
+  {id:"e6",q:"Which is a disadvantage of wind power?",a:"It's unreliable, because good wind isn't always there",w:["It produces radioactive waste","It burns fossil fuels","It needs a large river"],
+   ex:"Only about 15–30% of winds are suitable, the turbines are expensive, and they can harm birds."},
+  {id:"e7",q:"How does a fossil fuel power plant make electricity?",a:"Burning fuel boils water; the steam spins a turbine and generator",w:["The fuel touches a battery","Sunlight hits panels","Falling water turns a wheel"],
+   ex:"Heat → steam → turbine → coil spinning in a magnet → electricity."},
+  {id:"e8",q:"Why can't Ontario shut down its nuclear plants and switch only to wind and solar right away?",a:"Wind and solar are unreliable and expensive; nuclear gives steady power",w:["Wind and solar make too much pollution","Ontario has no sun or wind","Nuclear is renewable"],
+   ex:"Nuclear runs day and night in any weather. Wind and solar come and go, and building enough to replace half the province's power would be very expensive."},
+  {id:"e9",q:"Which is an advantage of nuclear power?",a:"No greenhouse gas emissions, and very reliable",w:["It's renewable","It has no waste","It only works on sunny days"],
+   ex:"Big pros: reliable and very energy-dense with almost no greenhouse gases. Big cons: radioactive waste and accident risk."},
+  {id:"e10",q:"Classify biomass and natural gas.",a:"Biomass is renewable; natural gas is non-renewable",w:["Both renewable","Both non-renewable","Biomass non-renewable; natural gas renewable"],
+   ex:"Biomass (plant material) regrows. Natural gas is a fossil fuel."}
+  ]},
+{ id:"cost", name:"Cost of Electricity", badge:"Bill Buster", lesson:"3.11",
+  power:{title:"Cost = kW × h × rate", pts:[
+    "<b>Kilowatt hour (kWh)</b> is a unit of <b>ENERGY</b>: 1 kW used for 1 h. <b>1 kWh = 3 600 000 J</b>.",
+    "<b>cost = power (kW) × time (h) × cost per kWh</b>.",
+    "Convert first: <b>W ÷ 1000 = kW</b> · <b>min ÷ 60 = h</b>. Rate here is <b>12¢/kWh</b> ($0.12).",
+    "<b>EnerGuide</b> label: how much energy an appliance uses in a year, compared to similar models. <b>ENERGY STAR</b>: highly efficient.",
+    "Cheapest to buy isn't always cheapest to own: add up the running costs too."],
+   ex:["Worked example","1500 W hair dryer, 6 min a day for 3 days.<br>1.5 kW × 0.3 h × $0.12 = <b>$0.054 (5.4¢)</b>"]},
+  qs:[
+  {id:"k1",q:"The kilowatt hour (kWh) is a unit of…",a:"Energy",w:["Power","Current","Charge"],
+   ex:"kW × h = energy. Power is just kW (or W)."},
+  {id:"k2",q:"How many joules are in 1 kWh?",a:"3 600 000 J",w:["1000 J","3600 J","60 000 J"],
+   ex:"1000 W × 3600 s = 3 600 000 J."},
+  {id:"k3",q:"Convert 2500 W to kW and 45 min to hours.",a:"2.5 kW and 0.75 h",w:["2 500 000 kW and 2700 h","25 kW and 0.45 h","0.25 kW and 7.5 h"],
+   ex:"2500 ÷ 1000 = 2.5 kW. 45 ÷ 60 = 0.75 h."},
+  {id:"k4",q:"What does it cost to use a 1500 W hair dryer for 6 minutes a day for 3 days, at 12¢/kWh?",a:"About 5.4¢",w:["$32.40","$1.08","$540"],
+   ex:"Total time: 6 × 3 = 18 min = 0.3 h. 1.5 kW × 0.3 h × $0.12 = $0.054 = 5.4¢.",
+   w2:"P = 1500 W ÷ 1000 = 1.5 kW\nt = 18 min ÷ 60 = 0.3 h\ncost = 1.5 × 0.3 × $0.12\ncost = $0.054 (5.4¢)"},
+  {id:"k5",q:"A 1500 W space heater runs 6 h a day for 30 days at 12¢/kWh. What does it cost?",a:"$32.40",w:["$1.08","$3240","$10.80"],
+   ex:"Time: 6 × 30 = 180 h. 1.5 kW × 180 h = 270 kWh. 270 × $0.12 = $32.40.",
+   w2:"1.5 kW × 180 h = 270 kWh\ncost = 270 kWh × $0.12\ncost = $32.40"},
+  {id:"k6",q:"A laptop uses a 75 W adapter. What does it cost to run it 24 hours a day for a year at 12¢/kWh?",a:"About $78.84",w:["$7884","$0.22","$657"],
+   ex:"Time: 24 × 365 = 8760 h. 0.075 kW × 8760 h = 657 kWh. 657 × $0.12 = $78.84.",
+   w2:"0.075 kW × 8760 h = 657 kWh\ncost = 657 × $0.12\ncost = $78.84"},
+  {id:"k7",sc:"A 75 W incandescent bulb and an 11 W LED give the same light. Each runs 4.0 h a day for a year at 12¢/kWh.",q:"How much does the LED save in a year?",a:"About $11.21",w:["$64","$1.93","$13.14"],
+   ex:"Hours: 4 × 365 = 1460 h. Incandescent: 0.075 × 1460 × 0.12 = $13.14. LED: 0.011 × 1460 × 0.12 = $1.93. Saving: $11.21.",
+   w2:"75 W: 0.075 × 1460 × $0.12 = $13.14\n11 W: 0.011 × 1460 × $0.12 = $1.93\nsaving = $13.14 − $1.93 = $11.21"},
+  {id:"k8",q:"Why does an incandescent bulb use so much more energy than an LED for the same light?",a:"Most of its energy is wasted as heat",w:["It makes more light","It runs on DC","It has no resistance"],
+   ex:"Incandescent bulbs are very inefficient: lots of heat, a little light."},
+  {id:"k9",q:"What does an EnerGuide label tell you?",a:"How much energy the appliance uses in a year, compared with similar models",w:["The price of the appliance","How many volts it needs","That it was made in Canada"],
+   ex:"EnerGuide = yearly energy use (kWh) and how it compares. ENERGY STAR = a symbol that means highly efficient."},
+  {id:"k10",sc:"Fridge A costs $800 and uses 550 kWh a year. Fridge B costs $1000 and uses 300 kWh a year. Electricity is 12¢/kWh.",q:"What are the yearly running costs?",a:"A: $66 · B: $36",w:["A: $550 · B: $300","A: $6.60 · B: $3.60","A: $96 · B: $120"],
+   ex:"A: 550 × $0.12 = $66. B: 300 × $0.12 = $36.",
+   w2:"A: 550 kWh × $0.12 = $66 per year\nB: 300 kWh × $0.12 = $36 per year"},
+  {id:"k11",sc:"Same fridges: B costs $200 more but saves $30 a year to run.",q:"After about how many years does fridge B pay for itself?",a:"About 6.7 years",w:["About 0.15 years","About 30 years","About 2 years"],
+   ex:"Extra price ÷ yearly saving = $200 ÷ $30 = 6.7 years.",
+   w2:"payback = extra cost ÷ saving per year\n= $200 ÷ $30\n= 6.7 years"}
+  ]},
+
+/* ---------- BOSS ---------- */
+{ id:"boss", name:"BOSS: Unit Test", badge:"Electric Champion", boss:true,
+  power:{title:"Boss: Review Mash-Up", pts:[
+    "Only <b>2 hearts</b>. These are the hardest questions from Mr. Mimna's Unit Review.",
+    "Combined circuits: solve the <b>parallel part first</b>, then add the series part.",
+    "Series: same current, voltages add. Parallel: same voltage, currents add.",
+    "Always: <b>convert units first</b> (min → s, W → kW, min → h)."],
+   ex:["Strategy","Grab a pencil and paper. Write the formula, plug in, then pick the answer."]},
+  qs:[
+  {id:"x1",sc:"A 4.0 Ω lamp is in series with a 6.0 Ω lamp and a 12 Ω lamp that are in parallel with each other. The battery is 12 V.",q:"What is the equivalent resistance of the circuit?",a:"8.0 Ω",w:["22 Ω","6.0 Ω","2.0 Ω"],
+   ex:"Parallel pair: 1/R = 1/6 + 1/12 = 3/12, R = 4.0 Ω. Then add the series lamp: 4.0 + 4.0 = 8.0 Ω.",
+   w2:"Parallel: 1/R = 1/6 + 1/12 = 3/12 → R = 4.0 Ω\nTotal: 4.0 Ω + 4.0 Ω = 8.0 Ω"},
+  {id:"x2",sc:"Same circuit: total resistance 8.0 Ω, battery 12 V.",q:"What is the current from the battery, and the voltage across the 4.0 Ω lamp?",a:"1.5 A and 6.0 V",w:["1.5 A and 12 V","96 A and 6.0 V","0.67 A and 2.7 V"],
+   ex:"I = V ÷ R = 12 ÷ 8.0 = 1.5 A. All of it goes through the 4.0 Ω lamp: V = I × R = 1.5 × 4.0 = 6.0 V. That leaves 6.0 V for the parallel pair.",
+   w2:"I = V ÷ R = 12 V ÷ 8.0 Ω = 1.5 A\nV(4 Ω) = I × R = 1.5 A × 4.0 Ω = 6.0 V\nV(pair) = 12 V − 6.0 V = 6.0 V"},
+  {id:"x3",sc:"Same circuit: 6.0 V across the parallel pair (6.0 Ω and 12 Ω).",q:"What are the currents through the 6.0 Ω and 12 Ω lamps?",a:"1.0 A and 0.50 A",w:["0.50 A and 1.0 A","1.5 A each","0.75 A each"],
+   ex:"I = V ÷ R. 6.0 ÷ 6.0 = 1.0 A; 6.0 ÷ 12 = 0.50 A. Check: 1.0 + 0.50 = 1.5 A, the battery current ✓. The 4.0 Ω lamp gets all 1.5 A, so it's the brightest.",
+   w2:"I(6 Ω) = 6.0 V ÷ 6.0 Ω = 1.0 A\nI(12 Ω) = 6.0 V ÷ 12 Ω = 0.50 A\ncheck: 1.0 + 0.50 = 1.5 A ✓"},
+  {id:"x4",sc:"A phone battery stores 41 000 J. Its charger supplies 5.0 V and takes 1.5 h to charge it fully.",q:"How much charge is delivered, and what is the average current?",a:"8200 C and about 1.5 A",w:["205 000 C and 38 A","8200 C and 5467 A","27 333 C and 5.0 A"],
+   ex:"Q = ΔE ÷ V = 41 000 ÷ 5.0 = 8200 C. Δt = 1.5 h × 3600 = 5400 s. I = Q ÷ Δt = 8200 ÷ 5400 = 1.52 A.",
+   w2:"Q = ΔE ÷ V = 41 000 J ÷ 5.0 V = 8200 C\nΔt = 1.5 h × 3600 = 5400 s\nI = Q ÷ Δt = 8200 C ÷ 5400 s = 1.5 A"},
+  {id:"x5",sc:"A parallel circuit has three branches on a 9.0 V source. Source current is 1.5 A; branch 1 carries 0.40 A and branch 2 carries 0.65 A.",q:"What is the resistance of branch 3?",a:"20 Ω",w:["6.0 Ω","4.05 Ω","0.05 Ω"],
+   ex:"I₃ = 1.5 − 0.40 − 0.65 = 0.45 A. Parallel, so V₃ = 9.0 V. R = V ÷ I = 9.0 ÷ 0.45 = 20 Ω.",
+   w2:"I₃ = 1.5 − 0.40 − 0.65 = 0.45 A\nV₃ = 9.0 V (parallel)\nR = V ÷ I = 9.0 V ÷ 0.45 A = 20 Ω"},
+  {id:"x6",sc:"A series circuit: 24 V battery, three lamps. 0.50 A flows through lamp 1. Lamp 2 has 9.5 V across it.",q:"What is the resistance of lamp 2?",a:"19 Ω",w:["4.75 Ω","48 Ω","0.053 Ω"],
+   ex:"Series → the current is 0.50 A everywhere. R = V ÷ I = 9.5 ÷ 0.50 = 19 Ω.",
+   w2:"I = 0.50 A (series: same everywhere)\nR = V ÷ I = 9.5 V ÷ 0.50 A\nR = 19 Ω"},
+  {id:"x7",sc:"Three identical spheres: A = +18, B = −6, C = 0. A touches B, then B touches C, then A touches C.",q:"What are the FINAL charges?",a:"A = +4.5, B = +3, C = +4.5",w:["A = +4, B = +4, C = +4","A = +6, B = +3, C = +3","A = +6, B = +6, C = 0"],
+   ex:"A+B: (18 − 6) ÷ 2 = +6 each. B+C: (6 + 0) ÷ 2 = +3 each. A+C: (6 + 3) ÷ 2 = +4.5 each. Total: 4.5 + 3 + 4.5 = 12 = 18 − 6 + 0 ✓ (charge is conserved).",
+   w2:"A+B: (+18 + −6) ÷ 2 = +6, +6\nB+C: (+6 + 0) ÷ 2 = +3, +3\nA+C: (+6 + +3) ÷ 2 = +4.5, +4.5\nTotal 12 = start 12 ✓"},
+  {id:"x8",sc:"Two neutral metal spheres touch each other on insulating stands. A negative rod is held near sphere 1 (never touching). The spheres are pulled apart, then the rod is removed.",q:"Which sphere ends up positive?",a:"Sphere 1, the one nearest the rod",w:["Sphere 2, the one furthest from the rod","Both end up negative","Neither: both are neutral"],
+   ex:"The negative rod pushes electrons away into sphere 2. Separate them and sphere 1 is short of electrons (+), sphere 2 has extra (−). Equal and opposite."},
+  {id:"x9",sc:"A string of 40 identical holiday lights is wired in series and plugged into 120 V.",q:"What's the voltage across each bulb, and what happens if one burns out?",a:"3 V each; they all go out",w:["120 V each; the rest stay on","3 V each; the rest stay on","4800 V each; they all go out"],
+   ex:"Series: voltages add up to the source. 120 ÷ 40 = 3 V each. One path → one gap kills them all. That's why newer strings use parallel."},
+  {id:"x10",sc:"A 60 W bulb is designed for 120 V.",q:"What current does it draw, and what is its resistance?",a:"0.50 A and 240 Ω",w:["2.0 A and 60 Ω","7200 A and 0.017 Ω","0.50 A and 60 Ω"],
+   ex:"I = P ÷ V = 60 ÷ 120 = 0.50 A. R = V ÷ I = 120 ÷ 0.50 = 240 Ω.",
+   w2:"I = P ÷ V = 60 W ÷ 120 V = 0.50 A\nR = V ÷ I = 120 V ÷ 0.50 A = 240 Ω"},
+  {id:"x11",sc:"A 1500 W hair dryer plugs into a 120 V outlet.",q:"What current does it draw, and how much energy does it use in 6.0 min?",a:"12.5 A and 540 000 J",w:["12.5 A and 9000 J","180 000 A and 540 000 J","0.08 A and 250 J"],
+   ex:"I = P ÷ V = 1500 ÷ 120 = 12.5 A. Δt = 6.0 × 60 = 360 s. ΔE = P × Δt = 1500 × 360 = 540 000 J.",
+   w2:"I = P ÷ V = 1500 W ÷ 120 V = 12.5 A\nΔt = 6.0 min × 60 = 360 s\nΔE = P × Δt = 1500 W × 360 s = 540 000 J"},
+  {id:"x12",sc:"Fridge A: $800, $66/year to run. Fridge B: $1000, $36/year to run.",q:"What is the total cost of owning each for 15 years?",a:"A: $1790 · B: $1540, so buy B",w:["A: $1790 · B: $1540, so buy A","A: $800 · B: $1000, so buy A","A: $990 · B: $540, so buy B"],
+   ex:"Price + 15 years of running. A: 800 + 66 × 15 = 800 + 990 = $1790. B: 1000 + 36 × 15 = 1000 + 540 = $1540. B is cheaper to own.",
+   w2:"A: $800 + 15 × $66 = $1790\nB: $1000 + 15 × $36 = $1540"}
+  ]}
+];
+STAGES.forEach(s=>s.qs.forEach(q=>{ if(q.w2){q.work=q.w2;delete q.w2} }));
+
+/* ============ MISSIONS (day-by-day plan) ============ */
+const MISSIONS = [
+  {id:"m1", day:"THU 12", date:[2026,10,12], title:"Static Zone", zone:"z1",
+   why:"Static electricity: charges, friction, conduction and induction. About 25 minutes."},
+  {id:"m2", day:"SAT 14", date:[2026,10,14], title:"Circuit Zone (bonus day)", zone:"z2",
+   why:"AC/DC, current and voltage. About 25 minutes. Missed it? Do it first on Sunday."},
+  {id:"m3", day:"SUN 15", date:[2026,10,15], title:"Power Zone", zone:"z3",
+   why:"Resistance, Ohm's law, power, energy sources, cost. About 40 minutes, with a break halfway."},
+  {id:"m4", day:"MON 16", date:[2026,10,16], title:"Boss + Weak-Spot Blitz", zone:"zb",
+   why:"Morning of the test: beat the Boss, then one Blitz of whatever you keep missing. About 15 minutes."}
+];
+
+/* ============ STATE ============ */
+const KEY="elecObby.v1";
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.stages)return Object.assign({coins:0,stages:{},missed:{},fixed:{},log:[]},s)}catch(e){}return{coins:0,stages:{},missed:{},fixed:{},log:[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load();
+
+const $=s=>document.querySelector(s);
+const app=$("#app");
+let view="map", run=null, ret="map";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const byId=id=>STAGES.find(s=>s.id===id);
+const idx=id=>STAGES.findIndex(s=>s.id===id);
+const cleared=id=>!!(S.stages[id]&&S.stages[id].best>0);
+const zoneOf=id=>ZONES.find(z=>z.stages.includes(id));
+const nonBoss=STAGES.filter(s=>!s.boss);
+const dayStart=d=>new Date(d[0],d[1],d[2]);
+function today(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate())}
+function unlocked(id){
+  const st=byId(id);
+  if(st.boss){ return today()>=dayStart([2026,10,16]) || nonBoss.filter(s=>cleared(s.id)).length>=8; }
+  const z=zoneOf(id); const k=z.stages.indexOf(id);
+  return k===0 || cleared(z.stages[k-1]);
+}
+const zoneDone=z=>z.stages.every(cleared);
+const zoneCount=z=>z.stages.filter(cleared).length;
+const starsHTML=(n,max=3)=>Array.from({length:max},(_,i)=>`<i class="star ${i<n?"on":""}"></i>`).join("");
+const heartsHTML=(n,max=3)=>Array.from({length:max},(_,i)=>`<i class="heart ${i<n?"":"gone"}"></i>`).join("");
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
+function buzz(){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}}
+const allQ=()=>{const m={};STAGES.forEach(s=>s.qs.forEach(q=>m[q.id]={...q,stage:s.name}));return m};
+const weakIds=()=>Object.keys(S.missed).filter(id=>(S.missed[id]||0)>(S.fixed[id]||0)&&allQ()[id]);
+
+function currentMission(){
+  const t=today();
+  if(t>dayStart([2026,10,16])) return null;
+  // First mission whose zone isn't done yet, but never one dated in the future if an earlier one is unfinished.
+  const firstUndone=MISSIONS.find(m=>{const z=ZONES.find(z=>z.id===m.zone);return m.zone==="zb"?!cleared("boss"):!zoneDone(z)});
+  return firstUndone||MISSIONS[MISSIONS.length-1];
+}
+function countdown(){
+  const ms=TEST-new Date();
+  if(ms<=0) return "Test written: Mon Nov 16. Nice work climbing!";
+  const h=Math.floor(ms/3600000), d=Math.floor(h/24);
+  return d>=1?`Unit test Mon Nov 16, 2:30 PM · ${d} day${d>1?"s":""} ${h%24} h to go`:`Unit test TODAY at 2:30 PM · ${h} h ${Math.floor(ms/60000)%60} min to go`;
+}
+
+/* ============ VIEWS ============ */
+function render(){ ({map:mapView,power:powerView,q:qView,end:endView,report:reportView,cheat:cheatView})[view](); window.scrollTo(0,0) }
+
+function hud(extra=""){
+  return `<div class="hud"><div class="chip"><i class="coin"></i><span id="coins">${S.coins}</span></div>${extra}<div class="hudbtns"><button class="iconbtn volt" id="cheat" aria-label="Open the formula cheat card">CHEAT CARD</button><button class="iconbtn" id="rep" aria-label="Open the progress report">REPORT</button></div></div>`;
+}
+function openSide(v){ if(view===v)return; if(view!=="cheat"&&view!=="report")ret=view; view=v; render() }
+function goBack(){ view=ret||"map"; if(view==="q"&&run&&run.answered){advance();return} render() }
+function advance(){ const dead=run.hearts<=0, last=run.k===run.qs.length-1; if(dead)finish(false); else if(last)finish(true); else {run.k++;run.answered=false;view="q";render()} }
+function wireHud(){ $("#rep").onclick=()=>openSide("report"); $("#cheat").onclick=()=>openSide("cheat") }
+
+function mapView(){
+  const nCleared=STAGES.filter(s=>cleared(s.id)).length;
+  const cur=currentMission();
+  const weak=weakIds();
+  const focusZone=cur?cur.zone:null;
+  const nextIn=z=>z.stages.find(id=>!cleared(id)&&unlocked(id));
+  let plats="", side=0;
+  ZONES.forEach(z=>{
+    plats+=`<div class="zone">${z.name}${z.id!=="zb"?` · ${zoneCount(z)}/${z.stages.length}`:""}</div>`;
+    z.stages.forEach(id=>{
+      const s=byId(id), i=idx(id), st=S.stages[id], lock=!unlocked(id);
+      const isNext=focusZone===z.id&&nextIn(z)===id;
+      plats+=`<button class="plat ${side++%2?"r":""} ${s.boss?"boss":""} ${lock?"locked":""} ${isNext?"focus":""}" data-id="${id}" ${lock?'aria-disabled="true"':""}>
+       <span class="block">${s.boss?"!":i+1}</span>
+       <span class="meta"><b>${esc(s.name)}</b><span>${lock?(s.boss?"Opens Monday, or after 8 stages":"Locked: clear the stage below"):`${s.lesson?"Lesson "+s.lesson+" · ":""}${s.qs.length} jumps${st?` · best ${st.bestScore}/${s.qs.length}`:""}`}</span></span>
+       <span class="stars">${starsHTML(st?st.best:0)}</span></button>`;
+    });
+  });
+  const mHTML=MISSIONS.map(m=>{
+    const z=ZONES.find(z=>z.id===m.zone);
+    const done=m.zone==="zb"?cleared("boss"):zoneDone(z);
+    const pct=m.zone==="zb"?(cleared("boss")?100:0):Math.round(zoneCount(z)/z.stages.length*100);
+    const isCur=cur&&cur.id===m.id;
+    return `<div class="mission ${done?"done":""} ${isCur&&!done?"today":""}"><span class="day">${m.day}</span><div><b>${esc(m.title)}</b><span>${esc(m.why)}</span>
+      ${m.zone!=="zb"?`<div class="mbar"><i style="width:${pct}%"></i></div>`:""}
+      ${isCur&&!done?`<button class="mgo" data-zone="${m.zone}">${pct>0?"KEEP GOING":"START THIS MISSION"}</button>`:""}</div></div>`;
+  }).join("");
+  app.innerHTML = hud() + `
+  <div class="logo"><div class="avatar jump"><i class="h"></i><i class="b"></i><i class="l"></i></div>
+   <h1>ELECTRICITY<br>OBBY</h1>
+   <p>Climb ${STAGES.length} stages of Grade 9 Science, Unit 3. Don't fall in the lava. ${nCleared}/${STAGES.length} cleared.</p></div>
+  <section class="missions"><h2>Mission plan</h2><p class="countdown">${countdown()}</p>${mHTML}
+   <p class="note">Each stage starts with a Power-Up. Read it, then jump. Stuck on a formula? Tap CHEAT CARD.</p></section>
+  ${weak.length>=3?`<button class="blitz" id="blitz"><b>WEAK-SPOT BLITZ</b><span>${weak.length} question${weak.length>1?"s":""} you've missed. Clear them to fix them.</span></button>`:""}
+  <div class="map">${plats}</div>
+  <div class="lavabar">START · THE FLOOR IS LAVA</div>
+  <section class="badges"><h2>Badges</h2><div class="badgerow">${STAGES.map(s=>`<div class="badge ${cleared(s.id)?"on":""}"><i></i>${esc(s.badge)}</div>`).join("")}</div></section>
+  <a class="big alt" href="../" style="margin-top:16px;text-align:center;text-decoration:none">All science games</a>`;
+  // The map stacks bottom-up (column-reverse), so each zone label sits under its stages.
+  app.querySelectorAll(".plat").forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(!unlocked(id)){toast("LOCKED");return}startStage(id)});
+  app.querySelectorAll(".mgo").forEach(b=>b.onclick=()=>{const z=ZONES.find(z=>z.id===b.dataset.zone);const id=z.stages.find(id=>!cleared(id)&&unlocked(id))||z.stages[0];if(unlocked(id))startStage(id);else toast("LOCKED")});
+  if($("#blitz"))$("#blitz").onclick=startBlitz;
+  wireHud();
+}
+
+function startStage(id){
+  const st=byId(id); st.qs.forEach(q=>delete q._c);
+  run={id,stage:st,qs:shuffle(st.qs),k:0,hearts:st.boss?2:3,max:st.boss?2:3,correct:0,streak:0,coins:0,missed:[],answered:false,blitz:false};
+  view="power";render();
+}
+function startBlitz(){
+  const m=allQ(); const ids=shuffle(weakIds()).sort((a,b)=>((S.missed[b]||0)-(S.fixed[b]||0))-((S.missed[a]||0)-(S.fixed[a]||0))).slice(0,10);
+  const qs=shuffle(ids.map(id=>m[id]));
+  run={id:"blitz",stage:{id:"blitz",name:"Weak-Spot Blitz",badge:"",power:{title:"Weak-Spot Blitz",pts:[
+    "These are questions you got wrong before. Get one right here and it's <b>fixed</b>.",
+    "3 hearts, no stars on the line. Go slow and use the Cheat Card if you need it."]}},
+    qs,k:0,hearts:3,max:3,correct:0,streak:0,coins:0,missed:[],answered:false,blitz:true};
+  view="power";render();
+}
+
+function powerView(){
+  const st=run.stage;
+  const label=run.blitz?"BLITZ":st.boss?"BOSS":"STAGE "+(idx(st.id)+1);
+  app.innerHTML = hud() + `<div class="run">
+   <div class="stagehead">${label} · ${esc(st.name).toUpperCase()}</div>
+   <div class="card powerup"><span class="tag">POWER-UP · READ THIS FIRST</span><h3>${esc(st.power.title)}</h3><ul>${st.power.pts.map(p=>`<li>${p}</li>`).join("")}</ul>
+   ${st.power.ex?`<div class="ex"><b>${esc(st.power.ex[0]).toUpperCase()}</b>${st.power.ex[1]}</div>`:""}</div>
+   <p style="margin:0;color:#fff;font-weight:900;text-shadow:0 2px 0 var(--ink);text-align:center">${run.max} hearts · ${run.qs.length} jumps · 3 in a row = double coins</p>
+   <button class="big" id="go">START RUN</button>
+   <button class="big alt" id="back">Back to map</button></div>`;
+  $("#go").onclick=()=>{view="q";render()};
+  $("#back").onclick=()=>{view="map";render()};
+  wireHud();
+}
+
+function qView(){
+  const q=run.qs[run.k];
+  if(!q._c) q._c=shuffle([q.a,...q.w]);
+  const pct=Math.round(run.k/run.qs.length*100);
+  const label=run.blitz?"BLITZ":run.stage.boss?"BOSS":"STAGE "+(idx(run.stage.id)+1);
+  app.innerHTML = hud(`<div class="chip"><span class="hearts">${heartsHTML(run.hearts,run.max)}</span></div>`) + `<div class="run">
+    <div class="stagehead">${label} · JUMP ${run.k+1} OF ${run.qs.length}</div>
+    <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+    <div class="card" id="qc">${q.sc?`<p class="scene">${esc(q.sc)}</p>`:""}<h3>${esc(q.q)}</h3></div>
+    ${run.streak>=3?`<span class="streak">STREAK ×${run.streak} · DOUBLE COINS</span>`:""}
+    <div class="choices">${q._c.map((c,j)=>`<button class="choice" data-j="${j}">${esc(c)}</button>`).join("")}</div>
+    <div id="fb"></div></div>`;
+  app.querySelectorAll(".choice").forEach(b=>b.onclick=()=>answer(+b.dataset.j));
+  wireHud();
+}
+
+function answer(j){
+  if(run.answered)return; run.answered=true;
+  const q=run.qs[run.k]; const pick=q._c[j]; const ok=pick===q.a;
+  app.querySelectorAll(".choice").forEach((b,i)=>{b.disabled=true;const c=q._c[i];if(c===q.a)b.classList.add("right");else if(i===j)b.classList.add("wrong");else b.classList.add("dim")});
+  if(ok){run.correct++;run.streak++;const gain=run.streak>=3?20:10;run.coins+=gain;S.coins+=gain;toast(`+${gain}`);
+    if(run.blitz){S.fixed[q.id]=(S.fixed[q.id]||0)+1}}
+  else{run.streak=0;run.hearts--;run.missed.push(q.id);S.missed[q.id]=(S.missed[q.id]||0)+1;buzz();
+    const qc=$("#qc");qc.classList.remove("shake");void qc.offsetWidth;qc.classList.add("shake");
+    const hs=app.querySelector(".hearts");if(hs)hs.innerHTML=heartsHTML(run.hearts,run.max)}
+  save();
+  const c=$("#coins");if(c)c.textContent=S.coins;
+  const dead=run.hearts<=0; const last=run.k===run.qs.length-1;
+  $("#fb").innerHTML=`<div class="feedback ${ok?"ok":"no"}"><b>${ok?["NAILED IT","CLEAN JUMP","EZ","LET'S GO","CHARGED UP"][Math.floor(Math.random()*5)]:"OOF"}</b>
+    ${ok?"":`<p><strong>Answer:</strong> ${esc(q.a)}</p>`}
+    ${q.work?`<p class="work">${esc(q.work)}</p>`:""}<p>${esc(q.ex)}</p>
+    <button class="big" id="nx">${dead?"FELL IN THE LAVA…":last?(run.blitz?"FINISH BLITZ":"FINISH STAGE"):"NEXT JUMP"}</button></div>`;
+  $("#nx").onclick=advance;
+  $("#fb").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
+}
+
+function finish(done){
+  const st=run.stage;
+  let stars=0;
+  if(!run.blitz){
+    const rec=S.stages[st.id]||{best:0,bestScore:0,attempts:0,clears:0};
+    rec.attempts++;
+    if(done){rec.clears++; stars = run.hearts===run.max?3:(run.hearts>=run.max-1&&run.max>2?2:1); if(stars>rec.best)rec.best=stars; if(run.correct>rec.bestScore)rec.bestScore=run.correct}
+    rec.last=Date.now(); S.stages[st.id]=rec;
+  }
+  const entry={at:new Date().toISOString(),stage:st.id,stageName:st.name,correct:run.correct,total:run.qs.length,cleared:done,stars,missed:run.missed.slice()};
+  S.log.unshift(entry); S.log=S.log.slice(0,80); save();
+  run.stars=stars; run.cleared=done; view="end"; render();
+}
+
+function nextStageId(id){
+  const z=zoneOf(id); const k=z.stages.indexOf(id);
+  if(k<z.stages.length-1) return z.stages[k+1];
+  return null; // end of a zone = end of that day's mission
+}
+
+function endView(){
+  const st=run.stage;
+  const m=allQ(); const missedQs=run.missed.map(id=>m[id]);
+  let body;
+  if(run.blitz){
+    body=`<div class="avatar jump"><i class="h"></i><i class="b"></i><i class="l"></i></div><h2>${run.cleared?"BLITZ DONE!":"BLITZ OVER"}</h2>
+      <p>${run.correct}/${run.qs.length} fixed · +${run.coins} coins<br>${weakIds().length?`${weakIds().length} weak spot${weakIds().length>1?"s":""} left.`:"No weak spots left. You're ready."}</p>
+      <div class="btnrow">${weakIds().length?`<button class="big" id="again">BLITZ AGAIN</button>`:""}<button class="big alt" id="map">Map</button></div>`;
+  } else {
+    const next=run.cleared?nextStageId(st.id):null;
+    const z=zoneOf(st.id); const zoneFinished=run.cleared&&!st.boss&&zoneDone(z);
+    body = run.cleared?`<div class="avatar jump"><i class="h"></i><i class="b"></i><i class="l"></i></div><h2>${st.boss?"BOSS DOWN!":"STAGE CLEARED!"}</h2><div class="stars">${starsHTML(run.stars)}</div>
+      <p>${run.correct}/${run.qs.length} correct · +${run.coins} coins<br><strong>Badge: ${esc(st.badge)}</strong>${zoneFinished?`<br><br><strong>${esc(z.name.split("·")[1].trim())} ZONE COMPLETE.</strong> That's today's mission done.`:""}${st.boss?"<br><br>You beat the unit test boss. Go get 'em at 2:30.":""}</p>`
+     :`<h2>BACK TO CHECKPOINT</h2><p>You ran out of hearts on jump ${run.k+1}. ${run.correct} correct, +${run.coins} coins kept.<br>Read the Power-Up again, then retry. You'll get it.</p>`;
+    body+=`<div class="btnrow">
+      ${next?`<button class="big" id="nextst">NEXT: ${esc(byId(next).name).toUpperCase()}</button>`:""}
+      <button class="big ${next?"alt":""}" id="again">${run.cleared?"Replay for 3 stars":"RETRY STAGE"}</button>
+      <button class="big alt" id="map">Map</button></div>`;
+    run.next=next;
+  }
+  app.innerHTML = hud() + `<div class="run"><div class="card result">${body}</div>
+    ${missedQs.length?`<div class="panel"><h2>Review these</h2>${missedQs.map(q=>`<div class="miss">${esc(q.q)}<small>✓ ${esc(q.a)}</small></div>`).join("")}</div>`:""}</div>`;
+  if($("#nextst"))$("#nextst").onclick=()=>startStage(run.next);
+  if($("#again"))$("#again").onclick=()=>run.blitz?startBlitz():startStage(st.id);
+  $("#map").onclick=()=>{view="map";render()};
+  wireHud();
+}
+
+function cheatView(){
+  app.innerHTML = hud() + `<div class="run">
+   <div class="stagehead">CHEAT CARD · FORMULAS & RULES</div>
+   <div class="panel cheat"><h2>Formulas</h2><div class="tablewrap"><table><thead><tr><th>Find</th><th>Formula</th><th>Units</th></tr></thead><tbody>
+    <tr><td>Current</td><td>I = Q ÷ Δt</td><td>A = C ÷ s</td></tr>
+    <tr><td>Voltage</td><td>V = ΔE ÷ Q</td><td>V = J ÷ C</td></tr>
+    <tr><td>Ohm's law</td><td>V = I × R</td><td>V = A × Ω</td></tr>
+    <tr><td>Power</td><td>P = ΔE ÷ Δt<br>P = V × I</td><td>W = J ÷ s<br>W = V × A</td></tr>
+    <tr><td>Efficiency</td><td>E(out) ÷ E(in) × 100%</td><td>%</td></tr>
+    <tr><td>Cost</td><td>kW × h × rate</td><td>$ or ¢</td></tr>
+   </tbody></table></div>
+   <p class="note"><b>Convert first:</b> min × 60 = s · h × 3600 = s · W ÷ 1000 = kW · min ÷ 60 = h<br>1 C = 6.2 × 10¹⁸ electrons · 1 kWh = 3 600 000 J</p></div>
+   <div class="panel cheat"><h2>Series vs Parallel</h2><div class="rules">
+    <div><b>SERIES</b>One path<br>I: same everywhere<br>V: adds up to source<br>R: R₁ + R₂ + R₃<br>One out → all out</div>
+    <div><b>PARALLEL</b>2+ paths<br>I: branches add up<br>V: same as source<br>R: 1/R = 1/R₁ + 1/R₂, then flip<br>Total &lt; smallest</div>
+   </div><p class="note"><b>Ammeter</b> in series · <b>Voltmeter</b> in parallel</p></div>
+   <div class="panel cheat"><h2>Static</h2><p class="note" style="color:var(--ink);font-size:14px;margin:0">
+    Only electrons move · lost e⁻ = + · gained e⁻ = −<br>
+    Lower on the electrostatic series = becomes −<br>
+    Conduction (touch) = <b>same</b> charge · identical objects → average<br>
+    Induction (no touch + ground) = <b>opposite</b> charge<br>
+    <b>DC</b> = one direction (battery) · <b>AC</b> = alternates (wall outlet)</p></div>
+   <button class="big alt" id="back">Back</button></div>`;
+  $("#back").onclick=goBack;
+  wireHud();
+}
+
+function reportView(){
+  const m=allQ();
+  const tough=Object.entries(S.missed).sort((a,b)=>b[1]-a[1]).filter(([id])=>m[id]).slice(0,10);
+  const fmt=t=>{try{return new Date(t).toLocaleString([], {weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}catch(e){return t}};
+  app.innerHTML = hud() + `<div class="run">
+   <div class="stagehead">PROGRESS REPORT</div>
+   <div class="panel"><h2>Missions</h2>${MISSIONS.map(mi=>{const z=ZONES.find(z=>z.id===mi.zone);const done=mi.zone==="zb"?cleared("boss"):zoneDone(z);
+     return `<div class="miss ${done?"fixed":""}"><b>${mi.day} · ${esc(mi.title)}</b> · ${done?"done ✓":mi.zone==="zb"?"not yet":`${zoneCount(z)}/${z.stages.length} stages`}</div>`}).join("")}</div>
+   <div class="panel"><h2>Stages</h2><div class="tablewrap"><table><thead><tr><th>Stage</th><th>Stars</th><th>Best</th><th>Tries</th><th>Last</th></tr></thead><tbody>
+   ${STAGES.map(s=>{const r=S.stages[s.id];return `<tr><td>${esc(s.name)}</td><td><span class="stars">${starsHTML(r?r.best:0)}</span></td><td>${r?`${r.bestScore}/${s.qs.length}`:"—"}</td><td>${r?r.attempts:0}</td><td>${r&&r.last?fmt(r.last):"—"}</td></tr>`}).join("")}
+   </tbody></table></div><p class="note">Progress is saved in this browser on this device. ${S.log.length} runs played, ${S.coins} coins.</p></div>
+   <div class="panel"><h2>Keeps missing</h2>${tough.length?tough.map(([id,n])=>{const q=m[id];const fixed=(S.fixed[id]||0)>=n;return `<div class="miss ${fixed?"fixed":""}"><b>${esc(q.stage)}</b> · missed ${n}×${fixed?" · fixed in Blitz ✓":""}<br>${esc(q.q)}<small>✓ ${esc(q.a)}</small></div>`}).join(""):`<p class="note">Nothing missed yet. Play a stage and tricky questions show up here.</p>`}</div>
+   <button class="big alt" id="map">Back</button></div>`;
+  $("#map").onclick=goBack;
+  wireHud();
+}
+
+render();
+</script>
+
+</body>
+</html>
