@@ -3,205 +3,174 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Electricity Obby</title>
-</head>
-<body>
-
+<title>Electricity Swipe</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0e0f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Electricity">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0f12'/%3E%3Cpath d='M36 8 16 36h14l-4 20 22-30H34z' fill='%23d4ff3a'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@600;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
 <style>
-/* Same sky-obby look as the Chemistry Obby. Single committed bright game look; every color is explicit. */
+/* Same look as English Swipe: dark, one card per screen, swipe up. */
 :root{
-  --sky:#7cc7ff; --sky-deep:#3d9be9; --ink:#14213d; --paper:#ffffff;
-  --grass:#2fd36b; --grass-dark:#15a24b; --dirt:#a8642d; --dirt-dark:#7a4519;
-  --lava:#ff5a36; --lava-dark:#d63c1c; --coin:#ffc83d; --coin-dark:#e09a00;
-  --volt:#ffe14d; --volt-dark:#d9a400;
-  --lock:#9fb3c8; --good:#18b85a; --bad:#ef3b2d; --panel:#f3f8ff; --muted:#5a6b85;
-  --display:"Bungee", "Arial Black", Impact, system-ui, sans-serif;
-  --body:"Nunito", ui-rounded, "Segoe UI", system-ui, sans-serif;
-  color-scheme: light;
+  --bg:#0e0f12; --card:#17191e; --card2:#1f2229; --line:#2b2f38; --text:#f2f3f5; --dim:#9aa1ad; --faint:#6b7280;
+  --accent:#d4ff3a; --good:#4ade80; --bad:#ff6b6b; --test:#ff9f43;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
 }
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:600;font-size:16px;
-  background-image:linear-gradient(180deg,var(--sky-deep) 0%,var(--sky) 55%,#b9e3ff 100%);background-attachment:fixed;min-height:100%}
-button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
-button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
-.wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:12px 40px;min-height:100%;position:relative}
-.cloud{position:fixed;background:#fff;opacity:.85;pointer-events:none;z-index:0;
-  box-shadow:24px 0 0 #fff, 48px 0 0 #fff, 24px -16px 0 #fff}
-.c1{top:90px;left:-10px;width:24px;height:16px}
-.c2{top:260px;right:60px;width:24px;height:16px}
-.c3{top:520px;left:40px;width:24px;height:16px;opacity:.6}
-@media (prefers-reduced-motion:no-preference){.c1{animation:drift 38s linear infinite}.c2{animation:drift 52s linear infinite reverse}}
-@keyframes drift{from{transform:translateX(-40px)}to{transform:translateX(60vw)}}
-main{position:relative;z-index:1}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.5}
+button{font:inherit;color:inherit}
 
-/* HUD */
-.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:8px;align-items:center;justify-content:space-between;padding-block:8px}
-.chip{display:flex;align-items:center;gap:6px;background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:4px 10px;
-  font-family:var(--display);font-size:15px;box-shadow:0 4px 0 var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-.coin{width:16px;height:16px;border-radius:50%;background:var(--coin);border:3px solid var(--coin-dark);flex:none}
-.hearts{display:flex;gap:3px}
-.heart{width:18px;height:16px;position:relative;flex:none}
-.heart::before{content:"";position:absolute;inset:0;background:var(--lava);
-  clip-path:polygon(0 25%,25% 0,50% 20%,75% 0,100% 25%,100% 50%,50% 100%,0 50%)}
-.heart.gone::before{background:#c9d3df}
-.hudbtns{display:flex;gap:6px}
-.iconbtn{background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:4px 9px;font-family:var(--display);font-size:12px;box-shadow:0 4px 0 var(--ink)}
-.iconbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
-.iconbtn.volt{background:var(--volt)}
+/* Top bar */
+.top{position:fixed;inset:0 0 auto 0;z-index:20;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;
+  background:linear-gradient(var(--bg) 60%,rgba(14,15,18,0));pointer-events:none}
+.top .in{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:10px;pointer-events:auto}
+.home,.tool{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:10px;color:var(--dim);text-decoration:none;border:1px solid var(--line);background:none;cursor:pointer;padding:0}
+.tool{width:auto;padding:0 10px;font-family:var(--display);font-weight:700;font-size:13px;color:var(--accent)}
+.deckbtn{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.deckbtn b{font-family:var(--display);font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deckbtn svg{flex:none;color:var(--dim)}
+.count{font-family:var(--display);font-size:14px;color:var(--dim);font-variant-numeric:tabular-nums}
+.bar{max-width:520px;margin:8px auto 0;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
 
-/* Title */
-.logo{text-align:center;margin:10px 0 6px}
-.logo h1{font-family:var(--display);font-weight:400;font-size:clamp(32px,10vw,50px);line-height:.95;margin:0;color:var(--paper);
-  text-shadow:0 4px 0 var(--ink),3px 0 0 var(--ink),-3px 0 0 var(--ink),0 -3px 0 var(--ink),3px 4px 0 var(--ink),-3px 4px 0 var(--ink);letter-spacing:1px}
-.logo p{margin:10px auto 0;max-width:34ch;font-weight:800;color:var(--ink);background:rgba(255,255,255,.75);border-radius:10px;padding:6px 10px;text-wrap:balance}
+/* Feed */
+.feed{height:100%;height:100dvh;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none}
+.feed::-webkit-scrollbar{display:none}
+.slide{height:100%;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 70px) 16px calc(env(safe-area-inset-bottom,0px) + 34px)}
+.c{width:100%;max-width:520px;max-height:100%;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px 22px;scrollbar-width:none}
+.c::-webkit-scrollbar{display:none}
+.kick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.kick .t{color:var(--test)}
+.kick .r{color:var(--accent)}
+h2{font-family:var(--display);font-weight:700;font-size:clamp(28px,8vw,38px);line-height:1.05;margin:0 0 14px;letter-spacing:-.01em;text-wrap:balance}
+.q{font-family:var(--display);font-weight:500;font-size:clamp(21px,5.6vw,25px);line-height:1.25;margin:0 0 18px;text-wrap:pretty}
+.sc{font-size:15px;color:#d6d9df;background:var(--card2);border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:10px 12px;margin:0 0 14px}
+.c p{margin:0 0 12px}.c p:last-child{margin-bottom:0}
+.c ul,.c ol{margin:0 0 12px;padding-left:20px}.c li{margin-bottom:6px}
+.c li b,.c p b{color:var(--accent);font-weight:600}
+.ex{background:var(--card2);border-radius:14px;padding:12px 14px;margin-top:14px;font-size:15px;color:#d6d9df}
+.ex b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:4px;font-weight:600}
+.ex b.k{display:inline;font-size:inherit;letter-spacing:0;text-transform:none;color:var(--accent)}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:13px 15px;cursor:pointer;font-size:16px;line-height:1.35;transition:border-color .15s,background .15s}
+.opt:active{transform:scale(.99)}
+.opt:focus-visible,.deckbtn:focus-visible,.btn:focus-visible,.tool:focus-visible,.home:focus-visible,.deck:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--good);background:rgba(74,222,128,.12)}
+.opt.wrong{border-color:var(--bad);background:rgba(255,107,107,.1)}
+.opt.fade{opacity:.45}
+.why{display:none;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:15px;color:#d6d9df}
+.why.on{display:block}
+.why strong{font-family:var(--display);display:block;font-size:17px;margin-bottom:4px}
+.why .ok{color:var(--good)}.why .no{color:var(--bad)}
+.work{font-variant-numeric:tabular-nums;white-space:pre-line;background:var(--card2);border-radius:12px;padding:10px 12px;margin:8px 0 10px;font-size:15px;color:var(--text);font-family:ui-monospace,"SF Mono",Menlo,monospace;line-height:1.55}
+.hint{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);text-align:center;font-size:12px;color:var(--faint);pointer-events:none;transition:opacity .3s}
+.btn{display:block;width:100%;text-align:center;border-radius:14px;padding:14px;margin-top:10px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--card2);text-decoration:none;color:var(--text)}
+.btn.main{background:var(--accent);color:#111;border-color:var(--accent)}
+.big{font-family:var(--display);font-weight:700;font-size:56px;line-height:1;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.small{font-size:14px;color:var(--dim)}
 
-/* Mission plan */
-.missions{margin-top:16px;background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:12px;box-shadow:0 6px 0 var(--ink)}
-.missions h2{font-family:var(--display);font-weight:400;font-size:16px;margin:0 0 4px}
-.countdown{font-weight:900;color:var(--lava-dark);margin:0 0 10px;font-size:14px}
-.mission{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;border:2px solid #dbe3ee;border-radius:10px;padding:8px 10px;margin-top:8px}
-.mission .day{font-family:var(--display);font-size:11px;background:var(--lock);color:var(--paper);border-radius:6px;padding:4px 6px;text-align:center;min-width:52px;text-shadow:0 1px 0 var(--ink)}
-.mission b{display:block;font-weight:900;font-size:15px}
-.mission span{display:block;font-size:13px;color:var(--muted);font-weight:800;line-height:1.35}
-.mission.today{border:3px solid var(--ink);background:#fff8dc}
-.mission.today .day{background:var(--lava)}
-.mission.done .day{background:var(--good)}
-.mission.done b::after{content:" ✓";color:var(--good)}
-.mbar{height:8px;border-radius:4px;background:#e3e9f2;margin-top:6px;overflow:hidden}
-.mbar i{display:block;height:100%;background:var(--grass)}
-.mgo{margin-top:8px;font-family:var(--display);font-size:13px;border:3px solid var(--ink);border-radius:9px;padding:6px 10px;background:var(--grass);color:var(--paper);text-shadow:0 1px 0 var(--ink);box-shadow:0 3px 0 var(--ink)}
-.mgo:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+/* Sheets */
+.sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(0,0,0,.6);align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheet .p{width:100%;max-width:520px;max-height:88dvh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;
+  padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px)}
+.sheet h3{font-family:var(--display);font-size:20px;margin:4px 4px 4px}
+.sheet h4{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:18px 4px 8px}
+.countdown{margin:0 4px 12px;font-size:14px;color:var(--test);font-weight:600}
+.deck{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:8px;cursor:pointer}
+.deck .day{flex:none;width:46px;text-align:center;font-family:var(--display);font-weight:700;font-size:12px;line-height:1.15;color:var(--dim);border:1px solid var(--line);border-radius:10px;padding:6px 0}
+.deck .day big{display:block;font-size:19px;color:var(--text)}
+.deck.today .day{border-color:var(--accent);color:var(--accent)}
+.deck.done .day{border-color:var(--good);color:var(--good)}
+.deck .tx{flex:1;min-width:0}
+.deck b{display:block;font-family:var(--display);font-size:17px}
+.deck span{display:block;font-size:13px;color:var(--dim)}
+.deck .scr{font-family:var(--display);font-size:13px;color:var(--dim);white-space:nowrap}
+.deck.cur{border-color:var(--accent)}
+.deck i.new{font-style:normal;font-family:var(--body);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:#111;border-radius:6px;padding:2px 6px;vertical-align:2px;margin-left:4px}
+.statrow{display:flex;justify-content:space-between;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:15px}
+.statrow:last-child{border-bottom:0}
+.statrow span:last-child{color:var(--dim);font-variant-numeric:tabular-nums;text-align:right}
+.linkish{background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;padding:10px 4px;font-size:14px}
 
-/* Map */
-.map{display:flex;flex-direction:column-reverse;gap:14px;margin-top:18px}
-.zone{font-family:var(--display);font-size:12px;color:var(--paper);text-shadow:0 2px 0 var(--ink);letter-spacing:.5px;text-align:center;
-  background:rgba(20,33,61,.35);border-radius:8px;padding:5px 8px}
-.plat{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;width:86%;text-align:left;border:0;padding:0;background:none}
-.plat.r{margin-left:auto}
-.plat .block{width:58px;height:58px;flex:none;border:3px solid var(--ink);border-radius:8px;position:relative;
-  background:linear-gradient(var(--grass) 0 38%,var(--dirt) 38% 100%);box-shadow:0 5px 0 var(--ink);
-  display:grid;place-items:center;font-family:var(--display);font-size:22px;color:var(--paper);text-shadow:0 2px 0 var(--ink)}
-.plat .block::after{content:"";position:absolute;left:6px;right:6px;bottom:6px;height:6px;background:var(--dirt-dark);opacity:.5;border-radius:2px}
-.plat.boss .block{background:linear-gradient(#ff8a3d 0 38%,var(--lava-dark) 38% 100%)}
-.plat.locked .block{background:var(--lock);filter:saturate(.3)}
-.plat.focus .block{outline:4px dashed var(--volt);outline-offset:3px}
-.plat .meta{background:var(--paper);border:3px solid var(--ink);border-radius:10px;padding:8px 10px;box-shadow:0 4px 0 var(--ink);min-width:0}
-.plat .meta b{display:block;font-family:var(--display);font-weight:400;font-size:15px;line-height:1.15}
-.plat .meta span{display:block;font-size:13px;color:var(--muted);font-weight:800}
-.plat.locked .meta{opacity:.7}
-.stars{display:flex;gap:2px}
-.star{width:16px;height:16px;background:#cdd6e2;clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
-.star.on{background:var(--coin)}
-.plat:not(.locked):active .block{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
-.lavabar{margin-top:18px;height:34px;border:3px solid var(--ink);border-radius:8px;
-  background:repeating-linear-gradient(135deg,var(--lava) 0 14px,#ff7a4d 14px 28px);box-shadow:0 4px 0 var(--ink);
-  display:grid;place-items:center;font-family:var(--display);color:var(--paper);font-size:13px;text-shadow:0 2px 0 var(--ink)}
-@media (prefers-reduced-motion:no-preference){.lavabar{animation:lava 2s linear infinite;background-size:40px 40px}}
-@keyframes lava{to{background-position:40px 0}}
-.badges{margin-top:20px;background:var(--paper);border:3px solid var(--ink);border-radius:12px;padding:12px;box-shadow:0 5px 0 var(--ink)}
-.badges h2,.panel h2{font-family:var(--display);font-weight:400;font-size:16px;margin:0 0 8px}
-.badgerow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.badge{border:2px dashed var(--lock);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;font-weight:900;line-height:1.15;color:var(--muted);min-width:0}
-.badge i{display:block;width:30px;height:30px;margin:0 auto 4px;border-radius:6px;background:var(--lock);border:2px solid var(--ink);transform:rotate(45deg) scale(.8)}
-.badge.on{border:2px solid var(--ink);color:var(--ink);background:#fff8dc}
-.badge.on i{background:var(--coin)}
-.blitz{margin-top:16px;display:block;width:100%;text-align:left;background:var(--volt);border:3px solid var(--ink);border-radius:14px;padding:12px 14px;box-shadow:0 6px 0 var(--volt-dark),0 6px 0 3px var(--ink)}
-.blitz b{display:block;font-family:var(--display);font-weight:400;font-size:17px}
-.blitz span{display:block;font-size:14px;font-weight:800}
-.blitz:active{transform:translateY(4px)}
+/* Formula sheet */
+.ftab{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+.ftab td{padding:9px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.ftab td:first-child{color:var(--dim);font-size:13px;width:28%}
+.ftab td:nth-child(2){font-family:var(--display);font-weight:700;color:var(--accent)}
+.ftab td:last-child{color:var(--dim);font-size:13px;text-align:right}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rules div{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px;line-height:1.5}
+.rules b{display:block;font-family:var(--display);font-size:15px;color:var(--accent);margin-bottom:4px}
+.note{background:var(--card2);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.55;color:#d6d9df}
 
-/* Run screen */
-.run{display:flex;flex-direction:column;gap:12px}
-.progress{height:16px;border:3px solid var(--ink);border-radius:8px;background:var(--paper);overflow:hidden;box-shadow:0 3px 0 var(--ink)}
-.progress i{display:block;height:100%;background:var(--grass);border-right:3px solid var(--ink);transition:width .3s}
-.stagehead{font-family:var(--display);font-size:13px;color:var(--paper);text-shadow:0 2px 0 var(--ink);letter-spacing:.5px}
-.card{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:16px;box-shadow:0 6px 0 var(--ink)}
-.card .tag{display:inline-block;font-family:var(--display);font-size:11px;background:var(--ink);color:var(--paper);border-radius:6px;padding:3px 7px;margin-bottom:8px;letter-spacing:.5px}
-.card .scene{background:var(--panel);border-left:5px solid var(--sky-deep);border-radius:6px;padding:8px 10px;margin:0 0 10px;font-size:15px;font-style:italic}
-.card h3{margin:0;font-size:19px;line-height:1.3;font-weight:900;text-wrap:balance}
-.choices{display:grid;gap:10px}
-.choice{display:block;width:100%;text-align:left;background:var(--paper);border:3px solid var(--ink);border-radius:12px;padding:12px 14px;
-  font-weight:800;font-size:16px;line-height:1.3;box-shadow:0 4px 0 var(--ink);min-height:52px}
-.choice:active:not([disabled]){transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
-.choice.right{background:#c9f7da;border-color:var(--good);box-shadow:0 4px 0 var(--good)}
-.choice.wrong{background:#ffd9d4;border-color:var(--bad);box-shadow:0 4px 0 var(--bad)}
-.choice[disabled]{cursor:default}
-.choice.dim{opacity:.55}
-.feedback{border:3px solid var(--ink);border-radius:14px;padding:14px;box-shadow:0 6px 0 var(--ink)}
-.feedback.ok{background:#e4fbec}
-.feedback.no{background:#fff0ec}
-.feedback b{font-family:var(--display);font-weight:400;font-size:17px;display:block;margin-bottom:4px}
-.feedback p{margin:0 0 12px;line-height:1.4}
-.feedback .work{font-variant-numeric:tabular-nums;background:rgba(255,255,255,.7);border-radius:8px;padding:8px 10px;white-space:pre-line}
-.big{display:block;width:100%;font-family:var(--display);font-size:18px;border:3px solid var(--ink);border-radius:12px;padding:12px;
-  background:var(--grass);color:var(--paper);text-shadow:0 2px 0 var(--ink);box-shadow:0 5px 0 var(--grass-dark),0 5px 0 3px var(--ink)}
-.big:active{transform:translateY(4px);box-shadow:0 1px 0 var(--grass-dark),0 1px 0 3px var(--ink)}
-.big.alt{background:var(--paper);color:var(--ink);text-shadow:none;box-shadow:0 5px 0 var(--ink)}
-.powerup .tag{background:var(--coin-dark)}
-.powerup ul{margin:8px 0 0;padding-left:20px;line-height:1.45}
-.powerup li{margin-bottom:4px}
-.powerup h3{font-family:var(--display);font-weight:400;font-size:20px}
-.powerup .ex{margin-top:10px;background:var(--panel);border:2px dashed var(--sky-deep);border-radius:10px;padding:8px 10px;font-size:15px;line-height:1.45}
-.powerup .ex b{font-family:var(--display);font-weight:400;font-size:12px;display:block;margin-bottom:2px;color:var(--sky-deep)}
-.streak{font-family:var(--display);font-size:13px;color:var(--ink);background:var(--coin);border:3px solid var(--ink);border-radius:8px;padding:2px 8px;align-self:center}
-.toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:20;font-family:var(--display);font-size:22px;color:var(--paper);
-  text-shadow:0 3px 0 var(--ink),2px 0 0 var(--ink),-2px 0 0 var(--ink);pointer-events:none;white-space:nowrap}
-@media (prefers-reduced-motion:no-preference){.toast{animation:pop 1s ease-out forwards}.shake{animation:shake .35s}}
-@keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
-@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
-
-/* Cheat card */
-.cheat table td:first-child{font-weight:900;white-space:nowrap}
-.cheat .rules{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
-.cheat .rules div{border:2px solid var(--ink);border-radius:10px;padding:8px;font-size:14px;line-height:1.45}
-.cheat .rules b{font-family:var(--display);font-weight:400;font-size:13px;display:block}
-
-/* End screens + report */
-.result{text-align:center}
-.result h2{font-family:var(--display);font-weight:400;font-size:28px;margin:4px 0 8px}
-.result .stars{justify-content:center;gap:6px;margin:6px 0 10px}
-.result .star{width:40px;height:40px}
-.result p{margin:0 0 14px;line-height:1.45}
-.btnrow{display:grid;gap:10px}
-.panel{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:14px;box-shadow:0 6px 0 var(--ink)}
-.tablewrap{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:6px 4px;border-bottom:2px solid #e3e9f2;vertical-align:top}
-th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
-.miss{border-left:5px solid var(--lava);background:var(--panel);border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:14px;line-height:1.35}
-.miss.fixed{border-left-color:var(--good)}
-.miss small{display:block;color:var(--good);font-weight:900;margin-top:4px}
-.note{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.4}
-.avatar{width:54px;height:70px;margin:0 auto 6px;position:relative}
-.avatar .h{position:absolute;left:12px;top:0;width:30px;height:28px;background:#ffd23f;border:3px solid var(--ink);border-radius:4px}
-.avatar .h::before,.avatar .h::after{content:"";position:absolute;top:9px;width:5px;height:6px;background:var(--ink)}
-.avatar .h::before{left:6px}.avatar .h::after{right:6px}
-.avatar .b{position:absolute;left:8px;top:30px;width:38px;height:26px;background:var(--sky-deep);border:3px solid var(--ink);border-radius:3px}
-.avatar .b::after{content:"";position:absolute;left:12px;top:3px;width:10px;height:16px;background:var(--volt);clip-path:polygon(60% 0,0 55%,45% 55%,30% 100%,100% 40%,55% 40%)}
-.avatar .l{position:absolute;left:12px;top:56px;width:30px;height:14px;background:var(--grass-dark);border:3px solid var(--ink);border-top:0}
-@media (prefers-reduced-motion:no-preference){.avatar.jump{animation:jump .6s ease-in-out infinite alternate}}
-@keyframes jump{to{transform:translateY(-10px)}}
+@media (max-height:720px){
+  html,body{font-size:15px;line-height:1.42}
+  .slide{padding-top:calc(env(safe-area-inset-top,0px) + 62px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 22px)}
+  .c{padding:18px 18px}
+  h2{font-size:26px;margin-bottom:10px}
+  .kick{margin-bottom:10px}
+  .c li{margin-bottom:3px}
+  .ex{margin-top:10px;padding:10px 12px;font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){.bar i,.opt{transition:none}}
 </style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="home" href="../" aria-label="Back to all science games"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3 5 8l5 5"/></svg></a>
+  <button class="deckbtn" id="deckbtn" aria-haspopup="dialog"><b id="deckname">Deck</b><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 5 4 4 4-4"/></svg></button>
+  <button class="tool" id="fbtn" aria-haspopup="dialog" aria-label="Open the formula sheet">f(x)</button>
+  <span class="count" id="count">1/1</span>
+</div><div class="bar"><i id="bar"></i></div></div>
+<main class="feed" id="feed" aria-live="polite"></main>
+<div class="hint" id="hint">Swipe up ↑</div>
 
-<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
-<div class="wrap"><main id="app"></main></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle"><div class="p">
+  <h3 id="sheettitle">Electricity · Unit 3</h3>
+  <p class="countdown" id="countdown"></p>
+  <h4>Game plan</h4>
+  <div id="plan"></div>
+  <h4>By lesson</h4>
+  <div id="decks"></div>
+  <button class="linkish" id="statsbtn">Progress (for parents)</button>
+  <div id="stats" hidden></div>
+</div></div>
+
+<div class="sheet" id="fsheet" role="dialog" aria-modal="true" aria-labelledby="ftitle"><div class="p">
+  <h3 id="ftitle">Formula sheet</h3>
+  <table class="ftab"><tbody>
+    <tr><td>Current</td><td>I = Q ÷ Δt</td><td>A = C ÷ s</td></tr>
+    <tr><td>Voltage</td><td>V = ΔE ÷ Q</td><td>V = J ÷ C</td></tr>
+    <tr><td>Ohm's law</td><td>V = I × R</td><td>V = A × Ω</td></tr>
+    <tr><td>Power</td><td>P = ΔE ÷ Δt<br>P = V × I</td><td>W = J ÷ s<br>W = V × A</td></tr>
+    <tr><td>Efficiency</td><td>E out ÷ E in × 100%</td><td>%</td></tr>
+    <tr><td>Cost</td><td>kW × h × rate</td><td>$ or ¢</td></tr>
+  </tbody></table>
+  <h4>Convert first</h4>
+  <div class="note">min × 60 = s · h × 3600 = s<br>W ÷ 1000 = kW · min ÷ 60 = h<br>1 C = 6.2 × 10¹⁸ electrons · 1 kWh = 3 600 000 J</div>
+  <h4>Series vs parallel</h4>
+  <div class="rules">
+    <div><b>Series</b>One path<br>I: same everywhere<br>V: adds up to source<br>R: R₁ + R₂ + R₃<br>One out → all out</div>
+    <div><b>Parallel</b>2+ paths<br>I: branches add up<br>V: same as source<br>R: 1/R = 1/R₁ + 1/R₂, then flip<br>Total &lt; smallest</div>
+  </div>
+  <div class="note" style="margin-top:8px">Ammeter in <b style="color:var(--accent)">series</b> · Voltmeter in <b style="color:var(--accent)">parallel</b></div>
+  <h4>Static</h4>
+  <div class="note">Only electrons move · lost e⁻ = + · gained e⁻ = −<br>Lower on the electrostatic series → becomes −<br>Conduction (touch) = same charge · identical objects → average<br>Induction (no touch + ground) = opposite charge<br>DC = one direction (battery) · AC = alternates (wall outlet)</div>
+  <button class="btn main" id="fclose">Back</button>
+</div></div>
 
 <script>
-/* ============ CONTENT: from Mr. Mimna's SNC1W Unit 3 (Electricity) class text + Unit Review ============ */
-/* Calculation answers follow the teacher's rule: formula, substitution, answer with units ("w" field = worked solution). */
-const TEST = new Date(2026,10,16,14,30); // Mon Nov 16, 2026, 2:30 PM
-
-const ZONES = [
-  {id:"z1", name:"ZONE 1 · STATIC", stages:["static","friction","induction"]},
-  {id:"z2", name:"ZONE 2 · CIRCUITS", stages:["circuits","current","voltage"]},
-  {id:"z3", name:"ZONE 3 · POWER", stages:["resistance","ohm","power","sources","cost"]},
-  {id:"zb", name:"BOSS", stages:["boss"]}
-];
-
+/* ---------- Content ----------
+   From Mr. Mimna's SNC1W Unit 3 (Electricity) class text and Unit Review.
+   Calculation answers follow his rule: formula, substitution, answer with units ("work"). */
 const STAGES = [
 /* ---------- ZONE 1 ---------- */
 { id:"static", name:"Static Electricity", badge:"Spark Starter", lesson:"3.1",
@@ -586,7 +555,7 @@ const STAGES = [
 /* ---------- BOSS ---------- */
 { id:"boss", name:"BOSS: Unit Test", badge:"Electric Champion", boss:true,
   power:{title:"Boss: Review Mash-Up", pts:[
-    "Only <b>2 hearts</b>. These are the hardest questions from Mr. Mimna's Unit Review.",
+    "The hardest questions from Mr. Mimna's Unit Review, all in one place.",
     "Combined circuits: solve the <b>parallel part first</b>, then add the series part.",
     "Series: same current, voltages add. Parallel: same voltage, currents add.",
     "Always: <b>convert units first</b> (min → s, W → kW, min → h)."],
@@ -630,281 +599,208 @@ const STAGES = [
 ];
 STAGES.forEach(s=>s.qs.forEach(q=>{ if(q.w2){q.work=q.w2;delete q.w2} }));
 
-/* ============ MISSIONS (day-by-day plan) ============ */
-const MISSIONS = [
-  {id:"m1", day:"THU 12", date:[2026,10,12], title:"Static Zone", zone:"z1",
-   why:"Static electricity: charges, friction, conduction and induction. About 25 minutes."},
-  {id:"m2", day:"SAT 14", date:[2026,10,14], title:"Circuit Zone (bonus day)", zone:"z2",
-   why:"AC/DC, current and voltage. About 25 minutes. Missed it? Do it first on Sunday."},
-  {id:"m3", day:"SUN 15", date:[2026,10,15], title:"Power Zone", zone:"z3",
-   why:"Resistance, Ohm's law, power, energy sources, cost. About 40 minutes, with a break halfway."},
-  {id:"m4", day:"MON 16", date:[2026,10,16], title:"Boss + Weak-Spot Blitz", zone:"zb",
-   why:"Morning of the test: beat the Boss, then one Blitz of whatever you keep missing. About 15 minutes."}
+
+/* ---------- Decks ----------
+   Each lesson becomes: recap card → first checks → second recap card (with worked example) → remaining checks.
+   The game plan decks string the lessons together for each study day before the Mon Nov 16 test. */
+const TEST=new Date(2026,10,16,14,30);
+const PLAN=[
+  {k:"thu",dow:"THU",dom:"12",date:[2026,10,12],name:"Static",sub:"Lessons 3.1–3.3 · about 25 min",lessons:["static","friction","induction"]},
+  {k:"sat",dow:"SAT",dom:"14",date:[2026,10,14],name:"Circuits",sub:"Lessons 3.4–3.6 · about 25 min · bonus day",lessons:["circuits","current","voltage"]},
+  {k:"sun",dow:"SUN",dom:"15",date:[2026,10,15],name:"Power",sub:"Lessons 3.7–3.11 · about 40 min, break halfway",lessons:["resistance","ohm","power","sources","cost"]},
+  {k:"mon",dow:"MON",dom:"16",date:[2026,10,16],name:"Test day",sub:"Unit Review boss + your misses · about 15 min",lessons:["boss"]}
 ];
-
-/* ============ STATE ============ */
-const KEY="elecObby.v1";
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.stages)return Object.assign({coins:0,stages:{},missed:{},fixed:{},log:[]},s)}catch(e){}return{coins:0,stages:{},missed:{},fixed:{},log:[]}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-let S=load();
-
-const $=s=>document.querySelector(s);
-const app=$("#app");
-let view="map", run=null, ret="map";
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const byId=id=>STAGES.find(s=>s.id===id);
-const idx=id=>STAGES.findIndex(s=>s.id===id);
-const cleared=id=>!!(S.stages[id]&&S.stages[id].best>0);
-const zoneOf=id=>ZONES.find(z=>z.stages.includes(id));
-const nonBoss=STAGES.filter(s=>!s.boss);
-const dayStart=d=>new Date(d[0],d[1],d[2]);
-function today(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate())}
-function unlocked(id){
-  const st=byId(id);
-  if(st.boss){ return today()>=dayStart([2026,10,16]) || nonBoss.filter(s=>cleared(s.id)).length>=8; }
-  const z=zoneOf(id); const k=z.stages.indexOf(id);
-  return k===0 || cleared(z.stages[k-1]);
-}
-const zoneDone=z=>z.stages.every(cleared);
-const zoneCount=z=>z.stages.filter(cleared).length;
-const starsHTML=(n,max=3)=>Array.from({length:max},(_,i)=>`<i class="star ${i<n?"on":""}"></i>`).join("");
-const heartsHTML=(n,max=3)=>Array.from({length:max},(_,i)=>`<i class="heart ${i<n?"":"gone"}"></i>`).join("");
-function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
-function buzz(){try{navigator.vibrate&&navigator.vibrate(120)}catch(e){}}
-const allQ=()=>{const m={};STAGES.forEach(s=>s.qs.forEach(q=>m[q.id]={...q,stage:s.name}));return m};
-const weakIds=()=>Object.keys(S.missed).filter(id=>(S.missed[id]||0)>(S.fixed[id]||0)&&allQ()[id]);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
-function currentMission(){
-  const t=today();
-  if(t>dayStart([2026,10,16])) return null;
-  // First mission whose zone isn't done yet, but never one dated in the future if an earlier one is unfinished.
-  const firstUndone=MISSIONS.find(m=>{const z=ZONES.find(z=>z.id===m.zone);return m.zone==="zb"?!cleared("boss"):!zoneDone(z)});
-  return firstUndone||MISSIONS[MISSIONS.length-1];
+const CARDS=[];
+STAGES.forEach(st=>{
+  const topic=st.boss?"Unit Review":"Lesson "+st.lesson;
+  const pts=st.power.pts, half=Math.ceil(pts.length/2), qh=Math.ceil(st.qs.length/2);
+  const exHTML=st.power.ex?`<div class="ex"><b>${esc(st.power.ex[0])}</b>${st.power.ex[1].replace(/<b>/g,'<b class="k">')}</div>`:"";
+  const learn=(h,list,extra)=>({t:"learn",stage:st.id,topic,h,b:`<ul>${list.map(p=>`<li>${p}</li>`).join("")}</ul>${extra||""}`});
+  if(st.boss){
+    CARDS.push(learn(st.power.title,pts,exHTML));
+    st.qs.forEach(q=>CARDS.push({t:"check",stage:st.id,topic,...q,test:true}));
+  }else{
+    CARDS.push(learn(st.name,pts.slice(0,half)));
+    st.qs.slice(0,qh).forEach(q=>CARDS.push({t:"check",stage:st.id,topic,...q}));
+    CARDS.push(learn(st.power.title,pts.slice(half),exHTML));
+    st.qs.slice(qh).forEach(q=>CARDS.push({t:"check",stage:st.id,topic,...q}));
+  }
+});
+CARDS.forEach(c=>c.key=c.t==="check"?c.id:c.stage+"-L"+CARDS.indexOf(c));
+
+const BREAK={t:"learn",stage:"",topic:"Break",h:"Halfway. Take 5.",b:`<p>Resistance and Ohm's law done. Grab a snack, then swipe for <b>Power & Efficiency</b>.</p>`,key:"break"};
+function deckCards(k){
+  if(k==="missed"){const ids=Object.keys(S.miss).filter(id=>S.miss[id]>0);return shuffle(CARDS.filter(c=>c.t==="check"&&ids.includes(c.id)))}
+  const p=PLAN.find(p=>p.k===k);
+  if(p){
+    const out=[];p.lessons.forEach((l,i)=>{if(p.k==="sun"&&i===2)out.push(BREAK);out.push(...CARDS.filter(c=>c.stage===l))});
+    return out;
+  }
+  return CARDS.filter(c=>c.stage===k);
 }
+const deckName=k=>k==="missed"?"Ones I've missed":(PLAN.find(p=>p.k===k)?`${PLAN.find(p=>p.k===k).dow} · ${PLAN.find(p=>p.k===k).name}`:(byId(k).boss?"Unit Review boss":`${byId(k).lesson} ${byId(k).name}`));
+const checksIn=k=>deckCards(k).filter(c=>c.t==="check").length;
+
+/* ---------- Saved progress (this browser only) ---------- */
+const KEY="electricitySwipe.v1";
+let S={sessions:0,first:null,last:null,topics:{},miss:{},decks:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==="object")S=Object.assign(S,s)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const finished=k=>!!(S.decks[k]&&S.decks[k].runs>0);
+/* A day counts as done once its own deck is finished, or every lesson in it is. */
+const dayDone=p=>finished(p.k)||p.lessons.every(finished);
+
+/* ---------- Feed ---------- */
+const feed=document.getElementById("feed"),countEl=document.getElementById("count"),barEl=document.getElementById("bar"),hint=document.getElementById("hint");
+let cur="thu",run=[],answered={},right=0,checks=0,missedNow=new Set(),started=false,io;
+
+function kick(c,extra){
+  return `<div class="kick">${c.test?'<span class="t">From the review</span><span>·</span>':''}<span>${esc(c.topic)}</span>${extra||""}</div>`;
+}
+function slideFor(c,n,retry){
+  const el=document.createElement("section");el.className="slide";el.dataset.n=n;
+  if(c.t==="learn"){
+    el.innerHTML=`<article class="c">${kick(c,c.topic==="Break"?"":'<span>·</span><span>Recap</span>')}<h2>${esc(c.h)}</h2>${c.b}</article>`;
+  }else{
+    const opts=[c.a,...c.w], order=shuffle(opts.map((o,i)=>i));
+    el.innerHTML=`<article class="c">${kick(c,retry?'<span>·</span><span class="r">Second try</span>':'<span>·</span><span>Quick check</span>')}
+      ${c.sc?`<p class="sc">${esc(c.sc)}</p>`:""}<p class="q">${esc(c.q)}</p><div class="opts">${order.map(i=>`<button class="opt" data-i="${i}">${esc(opts[i])}</button>`).join("")}</div>
+      <div class="why"></div></article>`;
+    el.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>answer(el,c,+b.dataset.i,retry)));
+  }
+  return el;
+}
+function answer(el,c,i,retry){
+  const key=el.dataset.n;if(answered[key])return;answered[key]=1;
+  const ok=i===0;
+  el.querySelectorAll(".opt").forEach(b=>{b.disabled=true;const j=+b.dataset.i;
+    if(j===0)b.classList.add("right");else if(j===i)b.classList.add("wrong");else b.classList.add("fade")});
+  const w=el.querySelector(".why");
+  w.innerHTML=`<strong class="${ok?"ok":"no"}">${ok?"Right.":"Not quite."}</strong>${c.work?`<div class="work">${esc(c.work)}</div>`:""}${esc(c.ex)}${ok?"":'<p class="small" style="margin-top:8px">This one comes back in a few cards.</p>'}`;
+  w.classList.add("on");
+  if(!retry){checks++;if(ok)right++}
+  const t=S.topics[c.stage]||(S.topics[c.stage]={r:0,w:0});ok?t.r++:t.w++;
+  if(ok){if(S.miss[c.id])S.miss[c.id]=Math.max(0,S.miss[c.id]-1);if(!S.miss[c.id])delete S.miss[c.id]}
+  else{S.miss[c.id]=(S.miss[c.id]||0)+1;missedNow.add(c.id);requeue(el,c)}
+  S.last=new Date().toISOString();save();
+}
+function requeue(el,c){
+  const slides=[...feed.querySelectorAll(".slide")];const idx=slides.indexOf(el);
+  const target=slides[Math.min(idx+5,slides.length-1)]; /* the last slide is the results card */
+  const s=slideFor(c,"r"+Date.now(),true);feed.insertBefore(s,target);observe(s);updateCount();
+}
+function endSlide(){
+  const el=document.createElement("section");el.className="slide";el.dataset.end="1";
+  el.innerHTML=`<article class="c" id="endc"></article>`;return el;
+}
+function nextDeck(){
+  const i=PLAN.findIndex(p=>p.k===cur);
+  if(i>=0&&i<PLAN.length-1)return PLAN[i+1].k;
+  return null;
+}
+function renderEnd(){
+  const c=document.getElementById("endc");if(!c)return;
+  const pct=checks?Math.round(right/checks*100):0;
+  if(checks&&cur!=="missed"){const d=S.decks[cur]||(S.decks[cur]={best:0,runs:0});d.best=Math.max(d.best,pct);save()}
+  const left=Object.keys(S.miss).length;
+  const plan=PLAN.find(p=>p.k===cur);
+  const topics=[...new Set([...missedNow].map(id=>CARDS.find(c=>c.id===id).topic))];
+  const nx=nextDeck();
+  const tomorrow=plan&&nx?PLAN.find(p=>p.k===nx):null;
+  c.innerHTML=`<div class="kick"><span>${esc(deckName(cur))}</span><span>·</span><span>Done</span></div>
+    <div class="big">${right}/${checks}</div><p class="small">${checks?`${pct}% on the first try.`:"No quick checks answered yet."}</p>
+    ${topics.length?`<p>Missed this round: ${topics.map(esc).join(", ")}.</p>`:checks?"<p>Clean run.</p>":""}
+    ${plan&&plan.k!=="mon"&&tomorrow?`<p class="small">Next up: <b>${esc(tomorrow.dow)} · ${esc(tomorrow.name)}</b>. Want a head start? It's right here.</p>`:""}
+    ${plan&&plan.k==="mon"?`<p>That's everything. Go get it at 2:30.</p>`:""}
+    ${left?`<button class="btn main" id="domiss">Redo the ones I've missed (${left})</button>`:""}
+    ${tomorrow?`<button class="btn ${left?"":"main"}" id="donext">Start ${esc(tomorrow.dow)} · ${esc(tomorrow.name)}</button>`:""}
+    <button class="btn ${left||tomorrow?"":"main"}" id="dopick">Pick another deck</button>`;
+  const dm=document.getElementById("domiss");if(dm)dm.onclick=()=>start("missed");
+  const dn=document.getElementById("donext");if(dn)dn.onclick=()=>start(nx);
+  document.getElementById("dopick").onclick=openSheet;
+}
+function observe(s){io&&io.observe(s)}
+function updateCount(){
+  const slides=[...feed.querySelectorAll(".slide")];
+  const top=feed.scrollTop,h=feed.clientHeight;const i=Math.min(slides.length-1,Math.round(top/h));
+  countEl.textContent=`${i+1}/${slides.length}`;barEl.style.width=((i+1)/slides.length*100)+"%";
+  if(i>0)hint.style.opacity=0;
+  if(slides[i]&&slides[i].dataset.end){
+    if(!slides[i].dataset.counted&&checks){slides[i].dataset.counted=1;if(cur!=="missed"){const d=S.decks[cur]||(S.decks[cur]={best:0,runs:0});d.runs++;save()}}
+    renderEnd();
+  }
+}
+function start(deck){
+  cur=deck;answered={};right=0;checks=0;missedNow=new Set();
+  run=deckCards(deck);feed.innerHTML="";
+  if(io)io.disconnect();
+  io=new IntersectionObserver(()=>updateCount(),{root:feed,threshold:.6});
+  run.forEach((c,n)=>{const s=slideFor(c,n,false);feed.appendChild(s);observe(s)});
+  const e=endSlide();feed.appendChild(e);observe(e);
+  feed.scrollTop=0;document.getElementById("deckname").textContent=deckName(deck);
+  hint.style.opacity=1;updateCount();closeSheets();
+  if(!started){started=true;S.sessions++;S.first=S.first||new Date().toISOString();S.last=new Date().toISOString();save()}
+  try{localStorage.setItem(KEY+".deck",deck)}catch(e){}
+}
+feed.addEventListener("scroll",()=>{clearTimeout(feed._t);feed._t=setTimeout(updateCount,60)},{passive:true});
+document.addEventListener("keydown",e=>{
+  if(document.querySelector(".sheet.on")){if(e.key==="Escape")closeSheets();return}
+  if(["ArrowDown","PageDown"," "].includes(e.key)){e.preventDefault();feed.scrollBy({top:feed.clientHeight,behavior:"smooth"})}
+  if(["ArrowUp","PageUp"].includes(e.key)){e.preventDefault();feed.scrollBy({top:-feed.clientHeight,behavior:"smooth"})}
+});
+
+/* ---------- Game plan, deck sheet, parent progress ---------- */
+function today(){const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate())}
+/* Today's deck: the first unfinished day, so a skipped Saturday rolls into Sunday. */
+const todayPlan=()=>PLAN.find(p=>!dayDone(p))||PLAN[PLAN.length-1];
 function countdown(){
   const ms=TEST-new Date();
-  if(ms<=0) return "Test written: Mon Nov 16. Nice work climbing!";
-  const h=Math.floor(ms/3600000), d=Math.floor(h/24);
-  return d>=1?`Unit test Mon Nov 16, 2:30 PM · ${d} day${d>1?"s":""} ${h%24} h to go`:`Unit test TODAY at 2:30 PM · ${h} h ${Math.floor(ms/60000)%60} min to go`;
+  if(ms<=0)return "Unit test written Mon Nov 16.";
+  const h=Math.floor(ms/3600000),d=Math.floor(h/24);
+  return d>=1?`Unit test Mon Nov 16, 2:30 PM · ${d} day${d>1?"s":""} ${h%24} h`:`Unit test today at 2:30 PM · ${h} h ${Math.floor(ms/60000)%60} min`;
 }
-
-/* ============ VIEWS ============ */
-function render(){ ({map:mapView,power:powerView,q:qView,end:endView,report:reportView,cheat:cheatView})[view](); window.scrollTo(0,0) }
-
-function hud(extra=""){
-  return `<div class="hud"><div class="chip"><i class="coin"></i><span id="coins">${S.coins}</span></div>${extra}<div class="hudbtns"><button class="iconbtn volt" id="cheat" aria-label="Open the formula cheat card">CHEAT CARD</button><button class="iconbtn" id="rep" aria-label="Open the progress report">REPORT</button></div></div>`;
+const sheet=document.getElementById("sheet"),fsheet=document.getElementById("fsheet");
+function openSheet(){
+  const tp=todayPlan();
+  document.getElementById("countdown").textContent=countdown();
+  document.getElementById("plan").innerHTML=PLAN.map(p=>{
+    const done=dayDone(p),isT=!done&&p===tp,b=S.decks[p.k];
+    return `<button class="deck${p.k===cur?" cur":""}${done?" done":""}${isT?" today":""}" data-k="${p.k}"><span class="day">${p.dow}<big>${p.dom}</big></span><div class="tx"><b>${esc(p.name)}${isT?' <i class="new">Today</i>':""}</b><span>${esc(p.sub)}</span></div><span class="scr">${done?(b&&b.runs?`Best ${b.best}%`:"Done"):`${checksIn(p.k)} checks`}</span></button>`}).join("");
+  const left=Object.keys(S.miss).length;
+  document.getElementById("decks").innerHTML=(left?`<button class="deck${cur==="missed"?" cur":""}" data-k="missed"><div class="tx"><b>Ones I've missed</b><span>Only the questions you got wrong</span></div><span class="scr">${left}</span></button>`:"")
+    +STAGES.map(st=>{const b=S.decks[st.id];return `<button class="deck${st.id===cur?" cur":""}" data-k="${st.id}"><div class="tx"><b>${esc(st.boss?"Unit Review boss":st.lesson+" "+st.name)}</b><span>${esc(st.power.title)}</span></div><span class="scr">${b&&b.runs?`Best ${b.best}%`:`${checksIn(st.id)} checks`}</span></button>`}).join("");
+  document.querySelectorAll("#sheet .deck").forEach(b=>b.onclick=()=>start(b.dataset.k));
+  document.getElementById("stats").hidden=true;
+  sheet.classList.add("on");
 }
-function openSide(v){ if(view===v)return; if(view!=="cheat"&&view!=="report")ret=view; view=v; render() }
-function goBack(){ view=ret||"map"; if(view==="q"&&run&&run.answered){advance();return} render() }
-function advance(){ const dead=run.hearts<=0, last=run.k===run.qs.length-1; if(dead)finish(false); else if(last)finish(true); else {run.k++;run.answered=false;view="q";render()} }
-function wireHud(){ $("#rep").onclick=()=>openSide("report"); $("#cheat").onclick=()=>openSide("cheat") }
+function closeSheets(){sheet.classList.remove("on");fsheet.classList.remove("on")}
+document.getElementById("deckbtn").onclick=openSheet;
+document.getElementById("fbtn").onclick=()=>fsheet.classList.add("on");
+document.getElementById("fclose").onclick=closeSheets;
+[sheet,fsheet].forEach(s=>s.addEventListener("click",e=>{if(e.target===s)closeSheets()}));
+document.getElementById("statsbtn").onclick=()=>{
+  const st=document.getElementById("stats");
+  if(!st.hidden){st.hidden=true;return}
+  const fmt=d=>d?new Date(d).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"never";
+  const topics=Object.entries(S.topics).filter(([k])=>byId(k)).map(([k,v])=>[k,v,v.r/(v.r+v.w)]).sort((a,b)=>a[2]-b[2]);
+  const misses=Object.entries(S.miss).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([id])=>CARDS.find(c=>c.id===id)).filter(Boolean);
+  st.innerHTML=`<div class="statrow"><span>Sessions</span><span>${S.sessions}</span></div>
+    <div class="statrow"><span>Last active</span><span>${fmt(S.last)}</span></div>
+    ${PLAN.map(p=>{const d=S.decks[p.k];return `<div class="statrow"><span>${p.dow} · ${esc(p.name)}</span><span>${dayDone(p)?(d&&d.runs?`done · best ${d.best}%`:"done (by lesson)"):`${p.lessons.filter(finished).length}/${p.lessons.length} lessons`}</span></div>`}).join("")}
+    ${topics.length?`<p class="small" style="margin:14px 4px 4px">By lesson, weakest first (all answers, including second tries):</p>`+topics.map(([k,v,p])=>{const s=byId(k);return `<div class="statrow"><span>${esc(s.boss?"Unit Review boss":s.lesson+" "+s.name)}</span><span>${Math.round(p*100)}% of ${v.r+v.w}</span></div>`}).join(""):'<p class="small" style="margin:14px 4px">No answers yet.</p>'}
+    ${misses.length?`<p class="small" style="margin:14px 4px 4px">Still missing:</p>`+misses.map(c=>`<div class="statrow"><span>${esc(c.q)}</span><span>${esc(c.topic)}</span></div>`).join(""):""}
+    <p class="small" style="margin:12px 4px 0">Saved on this device only.</p>`;
+  st.hidden=false;
+};
 
-function mapView(){
-  const nCleared=STAGES.filter(s=>cleared(s.id)).length;
-  const cur=currentMission();
-  const weak=weakIds();
-  const focusZone=cur?cur.zone:null;
-  const nextIn=z=>z.stages.find(id=>!cleared(id)&&unlocked(id));
-  let plats="", side=0;
-  ZONES.forEach(z=>{
-    plats+=`<div class="zone">${z.name}${z.id!=="zb"?` · ${zoneCount(z)}/${z.stages.length}`:""}</div>`;
-    z.stages.forEach(id=>{
-      const s=byId(id), i=idx(id), st=S.stages[id], lock=!unlocked(id);
-      const isNext=focusZone===z.id&&nextIn(z)===id;
-      plats+=`<button class="plat ${side++%2?"r":""} ${s.boss?"boss":""} ${lock?"locked":""} ${isNext?"focus":""}" data-id="${id}" ${lock?'aria-disabled="true"':""}>
-       <span class="block">${s.boss?"!":i+1}</span>
-       <span class="meta"><b>${esc(s.name)}</b><span>${lock?(s.boss?"Opens Monday, or after 8 stages":"Locked: clear the stage below"):`${s.lesson?"Lesson "+s.lesson+" · ":""}${s.qs.length} jumps${st?` · best ${st.bestScore}/${s.qs.length}`:""}`}</span></span>
-       <span class="stars">${starsHTML(st?st.best:0)}</span></button>`;
-    });
-  });
-  const mHTML=MISSIONS.map(m=>{
-    const z=ZONES.find(z=>z.id===m.zone);
-    const done=m.zone==="zb"?cleared("boss"):zoneDone(z);
-    const pct=m.zone==="zb"?(cleared("boss")?100:0):Math.round(zoneCount(z)/z.stages.length*100);
-    const isCur=cur&&cur.id===m.id;
-    return `<div class="mission ${done?"done":""} ${isCur&&!done?"today":""}"><span class="day">${m.day}</span><div><b>${esc(m.title)}</b><span>${esc(m.why)}</span>
-      ${m.zone!=="zb"?`<div class="mbar"><i style="width:${pct}%"></i></div>`:""}
-      ${isCur&&!done?`<button class="mgo" data-zone="${m.zone}">${pct>0?"KEEP GOING":"START THIS MISSION"}</button>`:""}</div></div>`;
-  }).join("");
-  app.innerHTML = hud() + `
-  <div class="logo"><div class="avatar jump"><i class="h"></i><i class="b"></i><i class="l"></i></div>
-   <h1>ELECTRICITY<br>OBBY</h1>
-   <p>Climb ${STAGES.length} stages of Grade 9 Science, Unit 3. Don't fall in the lava. ${nCleared}/${STAGES.length} cleared.</p></div>
-  <section class="missions"><h2>Mission plan</h2><p class="countdown">${countdown()}</p>${mHTML}
-   <p class="note">Each stage starts with a Power-Up. Read it, then jump. Stuck on a formula? Tap CHEAT CARD.</p></section>
-  ${weak.length>=3?`<button class="blitz" id="blitz"><b>WEAK-SPOT BLITZ</b><span>${weak.length} question${weak.length>1?"s":""} you've missed. Clear them to fix them.</span></button>`:""}
-  <div class="map">${plats}</div>
-  <div class="lavabar">START · THE FLOOR IS LAVA</div>
-  <section class="badges"><h2>Badges</h2><div class="badgerow">${STAGES.map(s=>`<div class="badge ${cleared(s.id)?"on":""}"><i></i>${esc(s.badge)}</div>`).join("")}</div></section>
-  <a class="big alt" href="../" style="margin-top:16px;text-align:center;text-decoration:none">All science games</a>`;
-  // The map stacks bottom-up (column-reverse), so each zone label sits under its stages.
-  app.querySelectorAll(".plat").forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(!unlocked(id)){toast("LOCKED");return}startStage(id)});
-  app.querySelectorAll(".mgo").forEach(b=>b.onclick=()=>{const z=ZONES.find(z=>z.id===b.dataset.zone);const id=z.stages.find(id=>!cleared(id)&&unlocked(id))||z.stages[0];if(unlocked(id))startStage(id);else toast("LOCKED")});
-  if($("#blitz"))$("#blitz").onclick=startBlitz;
-  wireHud();
-}
-
-function startStage(id){
-  const st=byId(id); st.qs.forEach(q=>delete q._c);
-  run={id,stage:st,qs:shuffle(st.qs),k:0,hearts:st.boss?2:3,max:st.boss?2:3,correct:0,streak:0,coins:0,missed:[],answered:false,blitz:false};
-  view="power";render();
-}
-function startBlitz(){
-  const m=allQ(); const ids=shuffle(weakIds()).sort((a,b)=>((S.missed[b]||0)-(S.fixed[b]||0))-((S.missed[a]||0)-(S.fixed[a]||0))).slice(0,10);
-  const qs=shuffle(ids.map(id=>m[id]));
-  run={id:"blitz",stage:{id:"blitz",name:"Weak-Spot Blitz",badge:"",power:{title:"Weak-Spot Blitz",pts:[
-    "These are questions you got wrong before. Get one right here and it's <b>fixed</b>.",
-    "3 hearts, no stars on the line. Go slow and use the Cheat Card if you need it."]}},
-    qs,k:0,hearts:3,max:3,correct:0,streak:0,coins:0,missed:[],answered:false,blitz:true};
-  view="power";render();
-}
-
-function powerView(){
-  const st=run.stage;
-  const label=run.blitz?"BLITZ":st.boss?"BOSS":"STAGE "+(idx(st.id)+1);
-  app.innerHTML = hud() + `<div class="run">
-   <div class="stagehead">${label} · ${esc(st.name).toUpperCase()}</div>
-   <div class="card powerup"><span class="tag">POWER-UP · READ THIS FIRST</span><h3>${esc(st.power.title)}</h3><ul>${st.power.pts.map(p=>`<li>${p}</li>`).join("")}</ul>
-   ${st.power.ex?`<div class="ex"><b>${esc(st.power.ex[0]).toUpperCase()}</b>${st.power.ex[1]}</div>`:""}</div>
-   <p style="margin:0;color:#fff;font-weight:900;text-shadow:0 2px 0 var(--ink);text-align:center">${run.max} hearts · ${run.qs.length} jumps · 3 in a row = double coins</p>
-   <button class="big" id="go">START RUN</button>
-   <button class="big alt" id="back">Back to map</button></div>`;
-  $("#go").onclick=()=>{view="q";render()};
-  $("#back").onclick=()=>{view="map";render()};
-  wireHud();
-}
-
-function qView(){
-  const q=run.qs[run.k];
-  if(!q._c) q._c=shuffle([q.a,...q.w]);
-  const pct=Math.round(run.k/run.qs.length*100);
-  const label=run.blitz?"BLITZ":run.stage.boss?"BOSS":"STAGE "+(idx(run.stage.id)+1);
-  app.innerHTML = hud(`<div class="chip"><span class="hearts">${heartsHTML(run.hearts,run.max)}</span></div>`) + `<div class="run">
-    <div class="stagehead">${label} · JUMP ${run.k+1} OF ${run.qs.length}</div>
-    <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
-    <div class="card" id="qc">${q.sc?`<p class="scene">${esc(q.sc)}</p>`:""}<h3>${esc(q.q)}</h3></div>
-    ${run.streak>=3?`<span class="streak">STREAK ×${run.streak} · DOUBLE COINS</span>`:""}
-    <div class="choices">${q._c.map((c,j)=>`<button class="choice" data-j="${j}">${esc(c)}</button>`).join("")}</div>
-    <div id="fb"></div></div>`;
-  app.querySelectorAll(".choice").forEach(b=>b.onclick=()=>answer(+b.dataset.j));
-  wireHud();
-}
-
-function answer(j){
-  if(run.answered)return; run.answered=true;
-  const q=run.qs[run.k]; const pick=q._c[j]; const ok=pick===q.a;
-  app.querySelectorAll(".choice").forEach((b,i)=>{b.disabled=true;const c=q._c[i];if(c===q.a)b.classList.add("right");else if(i===j)b.classList.add("wrong");else b.classList.add("dim")});
-  if(ok){run.correct++;run.streak++;const gain=run.streak>=3?20:10;run.coins+=gain;S.coins+=gain;toast(`+${gain}`);
-    if(run.blitz){S.fixed[q.id]=(S.fixed[q.id]||0)+1}}
-  else{run.streak=0;run.hearts--;run.missed.push(q.id);S.missed[q.id]=(S.missed[q.id]||0)+1;buzz();
-    const qc=$("#qc");qc.classList.remove("shake");void qc.offsetWidth;qc.classList.add("shake");
-    const hs=app.querySelector(".hearts");if(hs)hs.innerHTML=heartsHTML(run.hearts,run.max)}
-  save();
-  const c=$("#coins");if(c)c.textContent=S.coins;
-  const dead=run.hearts<=0; const last=run.k===run.qs.length-1;
-  $("#fb").innerHTML=`<div class="feedback ${ok?"ok":"no"}"><b>${ok?["NAILED IT","CLEAN JUMP","EZ","LET'S GO","CHARGED UP"][Math.floor(Math.random()*5)]:"OOF"}</b>
-    ${ok?"":`<p><strong>Answer:</strong> ${esc(q.a)}</p>`}
-    ${q.work?`<p class="work">${esc(q.work)}</p>`:""}<p>${esc(q.ex)}</p>
-    <button class="big" id="nx">${dead?"FELL IN THE LAVA…":last?(run.blitz?"FINISH BLITZ":"FINISH STAGE"):"NEXT JUMP"}</button></div>`;
-  $("#nx").onclick=advance;
-  $("#fb").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
-}
-
-function finish(done){
-  const st=run.stage;
-  let stars=0;
-  if(!run.blitz){
-    const rec=S.stages[st.id]||{best:0,bestScore:0,attempts:0,clears:0};
-    rec.attempts++;
-    if(done){rec.clears++; stars = run.hearts===run.max?3:(run.hearts>=run.max-1&&run.max>2?2:1); if(stars>rec.best)rec.best=stars; if(run.correct>rec.bestScore)rec.bestScore=run.correct}
-    rec.last=Date.now(); S.stages[st.id]=rec;
-  }
-  const entry={at:new Date().toISOString(),stage:st.id,stageName:st.name,correct:run.correct,total:run.qs.length,cleared:done,stars,missed:run.missed.slice()};
-  S.log.unshift(entry); S.log=S.log.slice(0,80); save();
-  run.stars=stars; run.cleared=done; view="end"; render();
-}
-
-function nextStageId(id){
-  const z=zoneOf(id); const k=z.stages.indexOf(id);
-  if(k<z.stages.length-1) return z.stages[k+1];
-  return null; // end of a zone = end of that day's mission
-}
-
-function endView(){
-  const st=run.stage;
-  const m=allQ(); const missedQs=run.missed.map(id=>m[id]);
-  let body;
-  if(run.blitz){
-    body=`<div class="avatar jump"><i class="h"></i><i class="b"></i><i class="l"></i></div><h2>${run.cleared?"BLITZ DONE!":"BLITZ OVER"}</h2>
-      <p>${run.correct}/${run.qs.length} fixed · +${run.coins} coins<br>${weakIds().length?`${weakIds().length} weak spot${weakIds().length>1?"s":""} left.`:"No weak spots left. You're ready."}</p>
-      <div class="btnrow">${weakIds().length?`<button class="big" id="again">BLITZ AGAIN</button>`:""}<button class="big alt" id="map">Map</button></div>`;
-  } else {
-    const next=run.cleared?nextStageId(st.id):null;
-    const z=zoneOf(st.id); const zoneFinished=run.cleared&&!st.boss&&zoneDone(z);
-    body = run.cleared?`<div class="avatar jump"><i class="h"></i><i class="b"></i><i class="l"></i></div><h2>${st.boss?"BOSS DOWN!":"STAGE CLEARED!"}</h2><div class="stars">${starsHTML(run.stars)}</div>
-      <p>${run.correct}/${run.qs.length} correct · +${run.coins} coins<br><strong>Badge: ${esc(st.badge)}</strong>${zoneFinished?`<br><br><strong>${esc(z.name.split("·")[1].trim())} ZONE COMPLETE.</strong> That's today's mission done.`:""}${st.boss?"<br><br>You beat the unit test boss. Go get 'em at 2:30.":""}</p>`
-     :`<h2>BACK TO CHECKPOINT</h2><p>You ran out of hearts on jump ${run.k+1}. ${run.correct} correct, +${run.coins} coins kept.<br>Read the Power-Up again, then retry. You'll get it.</p>`;
-    body+=`<div class="btnrow">
-      ${next?`<button class="big" id="nextst">NEXT: ${esc(byId(next).name).toUpperCase()}</button>`:""}
-      <button class="big ${next?"alt":""}" id="again">${run.cleared?"Replay for 3 stars":"RETRY STAGE"}</button>
-      <button class="big alt" id="map">Map</button></div>`;
-    run.next=next;
-  }
-  app.innerHTML = hud() + `<div class="run"><div class="card result">${body}</div>
-    ${missedQs.length?`<div class="panel"><h2>Review these</h2>${missedQs.map(q=>`<div class="miss">${esc(q.q)}<small>✓ ${esc(q.a)}</small></div>`).join("")}</div>`:""}</div>`;
-  if($("#nextst"))$("#nextst").onclick=()=>startStage(run.next);
-  if($("#again"))$("#again").onclick=()=>run.blitz?startBlitz():startStage(st.id);
-  $("#map").onclick=()=>{view="map";render()};
-  wireHud();
-}
-
-function cheatView(){
-  app.innerHTML = hud() + `<div class="run">
-   <div class="stagehead">CHEAT CARD · FORMULAS & RULES</div>
-   <div class="panel cheat"><h2>Formulas</h2><div class="tablewrap"><table><thead><tr><th>Find</th><th>Formula</th><th>Units</th></tr></thead><tbody>
-    <tr><td>Current</td><td>I = Q ÷ Δt</td><td>A = C ÷ s</td></tr>
-    <tr><td>Voltage</td><td>V = ΔE ÷ Q</td><td>V = J ÷ C</td></tr>
-    <tr><td>Ohm's law</td><td>V = I × R</td><td>V = A × Ω</td></tr>
-    <tr><td>Power</td><td>P = ΔE ÷ Δt<br>P = V × I</td><td>W = J ÷ s<br>W = V × A</td></tr>
-    <tr><td>Efficiency</td><td>E(out) ÷ E(in) × 100%</td><td>%</td></tr>
-    <tr><td>Cost</td><td>kW × h × rate</td><td>$ or ¢</td></tr>
-   </tbody></table></div>
-   <p class="note"><b>Convert first:</b> min × 60 = s · h × 3600 = s · W ÷ 1000 = kW · min ÷ 60 = h<br>1 C = 6.2 × 10¹⁸ electrons · 1 kWh = 3 600 000 J</p></div>
-   <div class="panel cheat"><h2>Series vs Parallel</h2><div class="rules">
-    <div><b>SERIES</b>One path<br>I: same everywhere<br>V: adds up to source<br>R: R₁ + R₂ + R₃<br>One out → all out</div>
-    <div><b>PARALLEL</b>2+ paths<br>I: branches add up<br>V: same as source<br>R: 1/R = 1/R₁ + 1/R₂, then flip<br>Total &lt; smallest</div>
-   </div><p class="note"><b>Ammeter</b> in series · <b>Voltmeter</b> in parallel</p></div>
-   <div class="panel cheat"><h2>Static</h2><p class="note" style="color:var(--ink);font-size:14px;margin:0">
-    Only electrons move · lost e⁻ = + · gained e⁻ = −<br>
-    Lower on the electrostatic series = becomes −<br>
-    Conduction (touch) = <b>same</b> charge · identical objects → average<br>
-    Induction (no touch + ground) = <b>opposite</b> charge<br>
-    <b>DC</b> = one direction (battery) · <b>AC</b> = alternates (wall outlet)</p></div>
-   <button class="big alt" id="back">Back</button></div>`;
-  $("#back").onclick=goBack;
-  wireHud();
-}
-
-function reportView(){
-  const m=allQ();
-  const tough=Object.entries(S.missed).sort((a,b)=>b[1]-a[1]).filter(([id])=>m[id]).slice(0,10);
-  const fmt=t=>{try{return new Date(t).toLocaleString([], {weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}catch(e){return t}};
-  app.innerHTML = hud() + `<div class="run">
-   <div class="stagehead">PROGRESS REPORT</div>
-   <div class="panel"><h2>Missions</h2>${MISSIONS.map(mi=>{const z=ZONES.find(z=>z.id===mi.zone);const done=mi.zone==="zb"?cleared("boss"):zoneDone(z);
-     return `<div class="miss ${done?"fixed":""}"><b>${mi.day} · ${esc(mi.title)}</b> · ${done?"done ✓":mi.zone==="zb"?"not yet":`${zoneCount(z)}/${z.stages.length} stages`}</div>`}).join("")}</div>
-   <div class="panel"><h2>Stages</h2><div class="tablewrap"><table><thead><tr><th>Stage</th><th>Stars</th><th>Best</th><th>Tries</th><th>Last</th></tr></thead><tbody>
-   ${STAGES.map(s=>{const r=S.stages[s.id];return `<tr><td>${esc(s.name)}</td><td><span class="stars">${starsHTML(r?r.best:0)}</span></td><td>${r?`${r.bestScore}/${s.qs.length}`:"—"}</td><td>${r?r.attempts:0}</td><td>${r&&r.last?fmt(r.last):"—"}</td></tr>`}).join("")}
-   </tbody></table></div><p class="note">Progress is saved in this browser on this device. ${S.log.length} runs played, ${S.coins} coins.</p></div>
-   <div class="panel"><h2>Keeps missing</h2>${tough.length?tough.map(([id,n])=>{const q=m[id];const fixed=(S.fixed[id]||0)>=n;return `<div class="miss ${fixed?"fixed":""}"><b>${esc(q.stage)}</b> · missed ${n}×${fixed?" · fixed in Blitz ✓":""}<br>${esc(q.q)}<small>✓ ${esc(q.a)}</small></div>`}).join(""):`<p class="note">Nothing missed yet. Play a stage and tricky questions show up here.</p>`}</div>
-   <button class="big alt" id="map">Back</button></div>`;
-  $("#map").onclick=goBack;
-  wireHud();
-}
-
-render();
+let first=todayPlan().k;
+const h=location.hash.slice(1);if(h&&(PLAN.find(p=>p.k===h)||byId(h)))first=h;
+window.addEventListener("hashchange",()=>{const d=location.hash.slice(1);if(d!==cur&&(PLAN.find(p=>p.k===d)||byId(d)))start(d)});
+start(first);
 </script>
-
 </body>
 </html>
