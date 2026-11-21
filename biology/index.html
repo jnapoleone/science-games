@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Biology Swipe</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0e0f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Biology">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0f12'/%3E%3Cpath d='M48 14C26 14 14 26 16 48c22 2 34-10 32-34zM18 46 38 26' fill='none' stroke='%23d4ff3a' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Same look as English Swipe and Electricity Swipe: dark, one card per screen, swipe up. */
+:root{
+  --bg:#0e0f12; --card:#17191e; --card2:#1f2229; --line:#2b2f38; --text:#f2f3f5; --dim:#9aa1ad; --faint:#6b7280;
+  --accent:#d4ff3a; --good:#4ade80; --bad:#ff6b6b; --test:#ff9f43;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.5}
+button{font:inherit;color:inherit}
+
+/* Top bar */
+.top{position:fixed;inset:0 0 auto 0;z-index:20;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;
+  background:linear-gradient(var(--bg) 60%,rgba(14,15,18,0));pointer-events:none}
+.top .in{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:10px;pointer-events:auto}
+.home,.tool{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:10px;color:var(--dim);text-decoration:none;border:1px solid var(--line);background:none;cursor:pointer;padding:0}
+.tool{width:auto;padding:0 10px;font-family:var(--display);font-weight:700;font-size:13px;color:var(--accent)}
+.deckbtn{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:none;border:0;padding:0;cursor:pointer;text-align:left}
+.deckbtn b{font-family:var(--display);font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deckbtn svg{flex:none;color:var(--dim)}
+.count{font-family:var(--display);font-size:14px;color:var(--dim);font-variant-numeric:tabular-nums}
+.bar{max-width:520px;margin:8px auto 0;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+
+/* Feed */
+.feed{height:100%;height:100dvh;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none}
+.feed::-webkit-scrollbar{display:none}
+.slide{height:100%;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 70px) 16px calc(env(safe-area-inset-bottom,0px) + 34px)}
+.c{width:100%;max-width:520px;max-height:100%;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px 22px;scrollbar-width:none}
+.c::-webkit-scrollbar{display:none}
+.kick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.kick .r{color:var(--accent)}
+h2{font-family:var(--display);font-weight:700;font-size:clamp(28px,8vw,38px);line-height:1.05;margin:0 0 14px;letter-spacing:-.01em;text-wrap:balance}
+.q{font-family:var(--display);font-weight:500;font-size:clamp(21px,5.6vw,25px);line-height:1.25;margin:0 0 18px;text-wrap:pretty}
+.sc{font-size:15px;color:#d6d9df;background:var(--card2);border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:10px 12px;margin:0 0 14px}
+.c p{margin:0 0 12px}.c p:last-child{margin-bottom:0}
+.c ul,.c ol{margin:0 0 12px;padding-left:20px}.c li{margin-bottom:6px}
+.c li b,.c p b{color:var(--accent);font-weight:600}
+.ex{background:var(--card2);border-radius:14px;padding:12px 14px;margin-top:14px;font-size:15px;color:#d6d9df}
+.ex b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:4px;font-weight:600}
+.ex b.k{display:inline;font-size:inherit;letter-spacing:0;text-transform:none;color:var(--accent)}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:13px 15px;cursor:pointer;font-size:16px;line-height:1.35;transition:border-color .15s,background .15s}
+.opt:active{transform:scale(.99)}
+.opt:focus-visible,.deckbtn:focus-visible,.btn:focus-visible,.tool:focus-visible,.home:focus-visible,.deck:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opt[disabled]{cursor:default}
+.opt.right{border-color:var(--good);background:rgba(74,222,128,.12)}
+.opt.wrong{border-color:var(--bad);background:rgba(255,107,107,.1)}
+.opt.fade{opacity:.45}
+.why{display:none;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:15px;color:#d6d9df}
+.why.on{display:block}
+.why strong{font-family:var(--display);display:block;font-size:17px;margin-bottom:4px}
+.why .ok{color:var(--good)}.why .no{color:var(--bad)}
+.hint{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);text-align:center;font-size:12px;color:var(--faint);pointer-events:none;transition:opacity .3s}
+.btn{display:block;width:100%;text-align:center;border-radius:14px;padding:14px;margin-top:10px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--card2);text-decoration:none;color:var(--text)}
+.btn.main{background:var(--accent);color:#111;border-color:var(--accent)}
+.big{font-family:var(--display);font-weight:700;font-size:56px;line-height:1;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.small{font-size:14px;color:var(--dim)}
+
+/* Sheets */
+.sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(0,0,0,.6);align-items:flex-end;justify-content:center}
+.sheet.on{display:flex}
+.sheet .p{width:100%;max-width:520px;max-height:88dvh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;
+  padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px)}
+.sheet h3{font-family:var(--display);font-size:20px;margin:4px 4px 4px}
+.sheet h4{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:18px 4px 8px}
+.subline{margin:0 4px 6px;font-size:14px;color:var(--dim)}
+.deck{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:8px;cursor:pointer}
+.deck .day{flex:none;width:46px;text-align:center;font-family:var(--display);font-weight:700;font-size:12px;line-height:1.15;color:var(--dim);border:1px solid var(--line);border-radius:10px;padding:6px 0}
+.deck .day big{display:block;font-size:19px;color:var(--text)}
+.deck.today .day{border-color:var(--accent);color:var(--accent)}
+.deck.done .day{border-color:var(--good);color:var(--good)}
+.deck .tx{flex:1;min-width:0}
+.deck b{display:block;font-family:var(--display);font-size:17px}
+.deck span{display:block;font-size:13px;color:var(--dim)}
+.deck .scr{font-family:var(--display);font-size:13px;color:var(--dim);white-space:nowrap}
+.deck.cur{border-color:var(--accent)}
+.deck.soon{cursor:default;opacity:.5;border-style:dashed}
+.deck i.new{font-style:normal;font-family:var(--body);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:#111;border-radius:6px;padding:2px 6px;vertical-align:2px;margin-left:4px;white-space:nowrap;display:inline-block}
+.statrow{display:flex;justify-content:space-between;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:15px}
+.statrow:last-child{border-bottom:0}
+.statrow span:last-child{color:var(--dim);font-variant-numeric:tabular-nums;text-align:right}
+.linkish{background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;padding:10px 4px;font-size:14px}
+
+/* Word sheet */
+.gl{display:grid;gap:0}
+.gl div{padding:9px 4px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45;color:#d6d9df}
+.gl div:last-child{border-bottom:0}
+.gl b{font-family:var(--display);font-weight:700;color:var(--accent);margin-right:6px;font-size:15px}
+.gl em{font-style:normal;color:var(--faint)}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rules div{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px;line-height:1.5}
+.rules b{display:block;font-family:var(--display);font-size:15px;color:var(--accent);margin-bottom:4px}
+
+@media (max-height:720px){
+  html,body{font-size:15px;line-height:1.42}
+  .slide{padding-top:calc(env(safe-area-inset-top,0px) + 62px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 22px)}
+  .c{padding:18px 18px}
+  h2{font-size:26px;margin-bottom:10px}
+  .kick{margin-bottom:10px}
+  .c li{margin-bottom:3px}
+  .ex{margin-top:10px;padding:10px 12px;font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){.bar i,.opt{transition:none}}
+</style>
+</head>
+<body>
+<div class="top"><div class="in">
+  <a class="home" href="../" aria-label="Back to all science games"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3 5 8l5 5"/></svg></a>
+  <button class="deckbtn" id="deckbtn" aria-haspopup="dialog"><b id="deckname">Deck</b><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 5 4 4 4-4"/></svg></button>
+  <button class="tool" id="fbtn" aria-haspopup="dialog" aria-label="Open the word list">Aa</button>
+  <span class="count" id="count">1/1</span>
+</div><div class="bar"><i id="bar"></i></div></div>
+<main class="feed" id="feed" aria-live="polite"></main>
+<div class="hint" id="hint">Swipe up ↑</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle"><div class="p">
+  <h3 id="sheettitle">Biology · Sustainable Ecosystems</h3>
+  <p class="subline">New lessons get added here as they come in.</p>
+  <h4>Lessons</h4>
+  <div id="decks"></div>
+  <button class="linkish" id="statsbtn">Progress (for parents)</button>
+  <div id="stats" hidden></div>
+</div></div>
+
+<div class="sheet" id="fsheet" role="dialog" aria-modal="true" aria-labelledby="ftitle"><div class="p">
+  <h3 id="ftitle">Word list</h3>
+  <h4>Ecology words</h4>
+  <div class="gl">
+    <div><b>Ecology</b>The study of the relationships between living things and their environment. <em>Living together.</em></div>
+    <div><b>Biotic</b>Living. <em>Flowers, cats</em></div>
+    <div><b>Abiotic</b>Non-living. <em>Rocks, water</em></div>
+    <div><b>Individual</b>A single member of a species. <em>A horse, a bee</em></div>
+    <div><b>Species</b>Living things similar enough to produce offspring together. <em>Male &amp; female horses</em></div>
+    <div><b>Habitat</b>A natural environment with the biotic and abiotic resources a species needs to survive. <em>Log, swamp, ocean, Arctic</em></div>
+    <div><b>Population</b>How many of a species live in an area. Always a number. <em>4 sharks</em></div>
+    <div><b>Community</b>All the living things in an area. <em>Coral reef: sharks, stingrays, fish, crabs</em></div>
+    <div><b>Ecosystem</b>The system of interactions between living things and their environment. <em>Pond, forest, desert, wetland</em></div>
+    <div><b>Biodiversity</b>A wide variety of living things. <em>Rainforest, coral reef</em></div>
+    <div><b>Biome</b>A large region of similar ecosystems because of a distinct climate. <em>Arctic tundra, savannah, boreal forest</em></div>
+  </div>
+  <h4>The four spheres</h4>
+  <div class="rules">
+    <div><b>Atmosphere</b>Air: layers of gas<br>Nitrogen 78%<br>Oxygen 21%</div>
+    <div><b>Lithosphere</b>Rock: Earth's rocky surface<br>Mountains, ocean floor, continents</div>
+    <div><b>Hydrosphere</b>Water: ALL of it<br>Oceans, lakes, ice, groundwater, clouds</div>
+    <div><b>Biosphere</b>Life: where living things are<br>Rainforests, ocean trenches, mountaintops</div>
+  </div>
+  <button class="btn main" id="fclose">Back</button>
+</div></div>
+
+<script>
+/* ---------- Content ----------
+   From Mr. Mimna's SNC1W Biology slides: "01-The Four Spheres" (Sustainable Ecosystems).
+   Add each new lesson as another entry in STAGES, and drop its id from COMING. */
+const STAGES = [
+{ id:"vocab", name:"Ecology Words", lesson:"1a",
+  power:{title:"Zooming Out", pts:[
+    "<b>Ecology</b> = the study of the relationships between living things and their environment. Ecology = <b>living together</b>.",
+    "<b>Biotic</b> = living (flowers, cats). <b>Abiotic</b> = non-living (rocks, water).",
+    "<b>Individual</b> = one member of a species (a horse, a bee). <b>Species</b> = living things similar enough to <b>produce offspring together</b>.",
+    "<b>Habitat</b> = a natural environment with the biotic and abiotic resources a species needs to survive (a log, a swamp, the Arctic).",
+    "<b>Population</b> = how many of a species live in an area. <b>Always a number</b> (4 sharks). <b>Community</b> = all the different living things in an area.",
+    "<b>Ecosystem</b> = the system of interactions between living things and their environment (pond, forest, desert, wetland).",
+    "<b>Biodiversity</b> = a wide variety of living things (rainforest, coral reef). <b>Biome</b> = a large region of similar ecosystems because of a <b>distinct climate</b> (arctic tundra, savannah, boreal forest)."],
+   ex:["Memory trick","<b>Population</b> is a number (4 sharks). <b>Community</b> is a list (sharks, stingrays, fish, crabs)."]},
+  qs:[
+  {id:"v1",q:"Ecology is…",a:"The study of the relationships between living things and their environment",w:["The study of rocks and minerals","The study of the weather","The study of the layers of the atmosphere"],
+   ex:"Ecology = living together: how living things interact with each other and with everything around them."},
+  {id:"v2",q:"Which of these is ABIOTIC?",a:"Water",w:["A cat","A flower","A bee"],
+   ex:"Abiotic = non-living. Water and rocks are abiotic; cats, flowers and bees are biotic (living)."},
+  {id:"v3",q:"Which of these is BIOTIC?",a:"A flower",w:["A rock","Water","A mountain"],
+   ex:"Biotic = living. A flower is alive; rocks, water and mountains are not."},
+  {id:"v4",sc:"One horse is grazing in a field.",q:"In ecology words, that one horse is…",a:"An individual",w:["A population","A community","A biome"],
+   ex:"Individual = a single member of a species."},
+  {id:"v5",q:"Two living things belong to the same SPECIES when…",a:"They are similar enough to produce offspring together",w:["They live in the same habitat","They are the same size","They eat the same food"],
+   ex:"Species = similar enough to have babies together, like male and female horses."},
+  {id:"v6",q:"Which of these is a POPULATION?",a:"4 sharks living on a coral reef",w:["Sharks, stingrays, fish and crabs on a coral reef","One shark","The coral reef and the water around it"],
+   ex:"Population is always a number of one species. A mix of different living things is a community."},
+  {id:"v7",sc:"A farm has horses, cows, grass and people.",q:"All of those living things together are a…",a:"Community",w:["Population","Species","Individual"],
+   ex:"Community = a group of different living things all living in one area. The farm is Mr. Mimna's example."},
+  {id:"v8",sc:"In a pond, fish eat insects, plants grow in the mud, and frogs lay eggs in the water.",q:"All of those living things AND the water and mud, interacting, make up…",a:"An ecosystem",w:["A population","A species","An individual"],
+   ex:"Ecosystem = the system of interactions between living things and their environment. It includes the non-living parts too."},
+  {id:"v9",q:"A rainforest has a huge variety of different living things. That's called…",a:"High biodiversity",w:["A large population","A single species","An abiotic habitat"],
+   ex:"Biodiversity = a wide variety of living things. Rainforests and coral reefs are the classic examples."},
+  {id:"v10",q:"Which of these is a BIOME?",a:"The boreal forest",w:["A pond","A log","4 sharks"],
+   ex:"A biome is a LARGE region of similar ecosystems because of its climate (boreal forest, arctic tundra, savannah). A pond is an ecosystem, a log is a habitat, and 4 sharks is a population."},
+  {id:"v11",q:"What makes a place a HABITAT for a species?",a:"It has the biotic and abiotic resources the species needs to survive",w:["It only has living things in it","It is always in the ocean","It is anywhere a scientist studies"],
+   ex:"A habitat gives a species what it needs to survive: living things (like food) and non-living things (like water and shelter)."}
+  ]},
+{ id:"spheres", name:"The Four Spheres", lesson:"1b",
+  power:{title:"Spheres Interact", pts:[
+    "<b>Atmosphere</b> = layers of gas around Earth: <b>nitrogen 78%</b>, <b>oxygen 21%</b>, plus other gases. Layers: troposphere, stratosphere, mesosphere, thermosphere.",
+    "<b>Lithosphere</b> = Earth's rocky outer surface: rocks and minerals (mountains, ocean floor, continents).",
+    "<b>Hydrosphere</b> = <b>ALL</b> the water on Earth: oceans, lakes, ice, groundwater and even <b>clouds</b>.",
+    "<b>Biosphere</b> = the parts of Earth where life exists: rainforests, ocean trenches, mountaintops.",
+    "The spheres are <b>closely connected</b>. A change in one causes changes in the others."],
+   ex:["Example: a wildfire","Burning forest (<b>bio</b>) sends smoke into the air (<b>atmo</b>). Rain then washes loose soil (<b>litho</b>) into lakes (<b>hydro</b>)."]},
+  qs:[
+  {id:"p1",q:"The atmosphere is mostly made of…",a:"Nitrogen",w:["Oxygen","Carbon dioxide","Hydrogen"],
+   ex:"Nitrogen is 78% of the atmosphere. Oxygen is only 21%. A common trap!"},
+  {id:"p2",q:"About how much of the atmosphere is oxygen?",a:"21%",w:["78%","50%","1%"],
+   ex:"Nitrogen 78%, oxygen 21%, other gases make up the last 1%."},
+  {id:"p3",q:"Which of these is a layer of the atmosphere?",a:"The stratosphere",w:["The hydrosphere","The ocean floor","The boreal forest"],
+   ex:"The layers are the troposphere, stratosphere, mesosphere and thermosphere."},
+  {id:"p4",q:"Mountains, continents and the ocean floor are part of the…",a:"Lithosphere",w:["Hydrosphere","Atmosphere","Biosphere"],
+   ex:"Litho = rock. The lithosphere is Earth's rocky outer surface, even the part under the ocean."},
+  {id:"p5",q:"Clouds belong to which sphere?",a:"Hydrosphere",w:["Atmosphere","Lithosphere","Biosphere"],
+   ex:"Clouds float in the air, but they're made of water, and the hydrosphere is ALL the water on Earth. Mr. Mimna lists clouds under the hydrosphere."},
+  {id:"p6",q:"Groundwater and ice are part of the…",a:"Hydrosphere",w:["Lithosphere","Atmosphere","Biosphere"],
+   ex:"Frozen or underground, it's still water: hydrosphere."},
+  {id:"p7",q:"The biosphere is…",a:"All the parts of Earth where life exists",w:["The layers of gas around Earth","All the water on Earth","Earth's rocky outer surface"],
+   ex:"Bio = life. The other three are the atmosphere, hydrosphere and lithosphere."},
+  {id:"p8",q:"Life is found in rainforests, deep ocean trenches and on mountaintops. Those places are all part of the…",a:"Biosphere",w:["Hydrosphere only","Atmosphere only","Lithosphere only"],
+   ex:"Anywhere life exists is part of the biosphere, from the deep ocean to the mountaintops."},
+  {id:"p9",sc:"A wildfire burns a forest in Northern Ontario.",q:"Smoke from the fire fills the air. Which sphere is that changing?",a:"Atmosphere",w:["Hydrosphere","Lithosphere","Biosphere"],
+   ex:"Smoke and gases go into the air, which is the atmosphere."},
+  {id:"p10",sc:"After the wildfire, rain washes loose soil off the burned hillside into a lake.",q:"Which two spheres are interacting?",a:"Lithosphere and hydrosphere",w:["Atmosphere and biosphere","Biosphere and lithosphere","Atmosphere and hydrosphere"],
+   ex:"Soil is part of the rocky surface (lithosphere), and the lake is water (hydrosphere)."},
+  {id:"p11",sc:"On a rocky coastline, waves crash against the shore and slowly wear the rock away.",q:"Which spheres are interacting?",a:"Hydrosphere and lithosphere",w:["Atmosphere and biosphere","Biosphere and lithosphere","Atmosphere only"],
+   ex:"Water (hydro) is wearing away rock (litho)."},
+  {id:"p12",sc:"Seagulls on the same coast breathe in oxygen from the air.",q:"Which spheres are interacting?",a:"Biosphere and atmosphere",w:["Hydrosphere and lithosphere","Lithosphere and atmosphere","Biosphere only"],
+   ex:"Living birds (bio) are taking gas from the air (atmo)."},
+  {id:"p13",q:"Why does Mr. Mimna say the four spheres are “very closely connected”?",a:"A change in one sphere causes changes in the others",w:["They are all made of the same material","They never affect each other","They are all found in the ocean"],
+   ex:"Like the wildfire: one event in the biosphere changed the air, the soil and the water too."}
+  ]}
+];
+/* Lessons we know are coming but haven't arrived yet: shown greyed out in the sheet. */
+const COMING=[{lesson:"2",name:"Next lesson",sub:"Shows up once it's in Drive"}];
+
+/* ---------- Decks ----------
+   Each lesson: recap card → first checks → second recap card (with example) → remaining checks. */
+const byId=id=>STAGES.find(s=>s.id===id);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+const CARDS=[];
+STAGES.forEach(st=>{
+  const topic="Lesson "+st.lesson;
+  const pts=st.power.pts, half=Math.ceil(pts.length/2), qh=Math.ceil(st.qs.length/2);
+  const exHTML=st.power.ex?`<div class="ex"><b>${esc(st.power.ex[0])}</b>${st.power.ex[1].replace(/<b>/g,'<b class="k">')}</div>`:"";
+  const learn=(h,list,extra)=>({t:"learn",stage:st.id,topic,h,b:`<ul>${list.map(p=>`<li>${p}</li>`).join("")}</ul>${extra||""}`});
+  CARDS.push(learn(st.name,pts.slice(0,half)));
+  st.qs.slice(0,qh).forEach(q=>CARDS.push({t:"check",stage:st.id,topic,...q}));
+  CARDS.push(learn(st.power.title,pts.slice(half),exHTML));
+  st.qs.slice(qh).forEach(q=>CARDS.push({t:"check",stage:st.id,topic,...q}));
+});
+CARDS.forEach((c,i)=>c.key=c.t==="check"?c.id:c.stage+"-L"+i);
+
+function deckCards(k){
+  if(k==="missed"){const ids=Object.keys(S.miss).filter(id=>S.miss[id]>0);return shuffle(CARDS.filter(c=>c.t==="check"&&ids.includes(c.id)))}
+  return CARDS.filter(c=>c.stage===k);
+}
+const deckName=k=>k==="missed"?"Ones I've missed":`${byId(k).lesson} ${byId(k).name}`;
+const checksIn=k=>deckCards(k).filter(c=>c.t==="check").length;
+
+/* ---------- Saved progress (this browser only) ---------- */
+const KEY="biologySwipe.v1";
+let S={sessions:0,first:null,last:null,topics:{},miss:{},decks:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==="object")S=Object.assign(S,s)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const finished=k=>!!(S.decks[k]&&S.decks[k].runs>0);
+const firstUnfinished=()=>STAGES.find(s=>!finished(s.id));
+
+/* ---------- Feed ---------- */
+const feed=document.getElementById("feed"),countEl=document.getElementById("count"),barEl=document.getElementById("bar"),hint=document.getElementById("hint");
+let cur=STAGES[0].id,answered={},right=0,checks=0,missedNow=new Set(),started=false,io;
+
+function kick(c,extra){return `<div class="kick"><span>${esc(c.topic)}</span>${extra||""}</div>`}
+function slideFor(c,n,retry){
+  const el=document.createElement("section");el.className="slide";el.dataset.n=n;
+  if(c.t==="learn"){
+    el.innerHTML=`<article class="c">${kick(c,'<span>·</span><span>Recap</span>')}<h2>${esc(c.h)}</h2>${c.b}</article>`;
+  }else{
+    const opts=[c.a,...c.w], order=shuffle(opts.map((o,i)=>i));
+    el.innerHTML=`<article class="c">${kick(c,retry?'<span>·</span><span class="r">Second try</span>':'<span>·</span><span>Quick check</span>')}
+      ${c.sc?`<p class="sc">${esc(c.sc)}</p>`:""}<p class="q">${esc(c.q)}</p><div class="opts">${order.map(i=>`<button class="opt" data-i="${i}">${esc(opts[i])}</button>`).join("")}</div>
+      <div class="why"></div></article>`;
+    el.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>answer(el,c,+b.dataset.i,retry)));
+  }
+  return el;
+}
+function answer(el,c,i,retry){
+  const key=el.dataset.n;if(answered[key])return;answered[key]=1;
+  const ok=i===0;
+  el.querySelectorAll(".opt").forEach(b=>{b.disabled=true;const j=+b.dataset.i;
+    if(j===0)b.classList.add("right");else if(j===i)b.classList.add("wrong");else b.classList.add("fade")});
+  const w=el.querySelector(".why");
+  w.innerHTML=`<strong class="${ok?"ok":"no"}">${ok?"Right.":"Not quite."}</strong>${esc(c.ex)}${ok?"":'<p class="small" style="margin-top:8px">This one comes back in a few cards.</p>'}`;
+  w.classList.add("on");
+  if(!retry){checks++;if(ok)right++}
+  const t=S.topics[c.stage]||(S.topics[c.stage]={r:0,w:0});ok?t.r++:t.w++;
+  if(ok){if(S.miss[c.id])S.miss[c.id]=Math.max(0,S.miss[c.id]-1);if(!S.miss[c.id])delete S.miss[c.id]}
+  else{S.miss[c.id]=(S.miss[c.id]||0)+1;missedNow.add(c.id);requeue(el,c)}
+  S.last=new Date().toISOString();save();
+}
+function requeue(el,c){
+  const slides=[...feed.querySelectorAll(".slide")];const idx=slides.indexOf(el);
+  const target=slides[Math.min(idx+5,slides.length-1)]; /* the last slide is the results card */
+  const s=slideFor(c,"r"+Date.now(),true);feed.insertBefore(s,target);observe(s);updateCount();
+}
+function endSlide(){
+  const el=document.createElement("section");el.className="slide";el.dataset.end="1";
+  el.innerHTML=`<article class="c" id="endc"></article>`;return el;
+}
+/* Next lesson after this one that he hasn't finished yet. */
+function nextDeck(){
+  const i=STAGES.findIndex(s=>s.id===cur);
+  const rest=i>=0?STAGES.slice(i+1):STAGES;
+  const n=rest.find(s=>!finished(s.id))||rest[0];
+  return n?n.id:null;
+}
+function renderEnd(){
+  const c=document.getElementById("endc");if(!c)return;
+  const pct=checks?Math.round(right/checks*100):0;
+  if(checks&&cur!=="missed"){const d=S.decks[cur]||(S.decks[cur]={best:0,runs:0});d.best=Math.max(d.best,pct);save()}
+  const left=Object.keys(S.miss).length;
+  const topics=[...new Set([...missedNow].map(id=>{const k=CARDS.find(c=>c.id===id);return k?deckName(k.stage):""}).filter(Boolean))];
+  const nx=cur==="missed"?null:nextDeck();
+  const allDone=STAGES.every(s=>finished(s.id));
+  c.innerHTML=`<div class="kick"><span>${esc(deckName(cur))}</span><span>·</span><span>Done</span></div>
+    <div class="big">${right}/${checks}</div><p class="small">${checks?`${pct}% on the first try.`:"No quick checks answered yet."}</p>
+    ${topics.length?`<p>Missed this round: ${topics.map(esc).join(", ")}.</p>`:checks?"<p>Clean run.</p>":""}
+    ${!nx&&allDone?`<p class="small">That's every lesson so far. New ones show up here as Mr. Mimna's slides come in.</p>`:""}
+    ${left?`<button class="btn main" id="domiss">Redo the ones I've missed (${left})</button>`:""}
+    ${nx?`<button class="btn ${left?"":"main"}" id="donext">Next: ${esc(deckName(nx))}</button>`:""}
+    <button class="btn ${left||nx?"":"main"}" id="dopick">Pick another deck</button>`;
+  const dm=document.getElementById("domiss");if(dm)dm.onclick=()=>start("missed");
+  const dn=document.getElementById("donext");if(dn)dn.onclick=()=>start(nx);
+  document.getElementById("dopick").onclick=openSheet;
+}
+function observe(s){io&&io.observe(s)}
+function updateCount(){
+  const slides=[...feed.querySelectorAll(".slide")];
+  const top=feed.scrollTop,h=feed.clientHeight;const i=Math.min(slides.length-1,Math.round(top/h));
+  countEl.textContent=`${i+1}/${slides.length}`;barEl.style.width=((i+1)/slides.length*100)+"%";
+  if(i>0)hint.style.opacity=0;
+  if(slides[i]&&slides[i].dataset.end){
+    if(!slides[i].dataset.counted&&checks){slides[i].dataset.counted=1;if(cur!=="missed"){const d=S.decks[cur]||(S.decks[cur]={best:0,runs:0});d.runs++;save()}}
+    renderEnd();
+  }
+}
+function start(deck){
+  cur=deck;answered={};right=0;checks=0;missedNow=new Set();
+  const run=deckCards(deck);feed.innerHTML="";
+  if(io)io.disconnect();
+  io=new IntersectionObserver(()=>updateCount(),{root:feed,threshold:.6});
+  run.forEach((c,n)=>{const s=slideFor(c,n,false);feed.appendChild(s);observe(s)});
+  const e=endSlide();feed.appendChild(e);observe(e);
+  feed.scrollTop=0;document.getElementById("deckname").textContent=deckName(deck);
+  hint.style.opacity=1;updateCount();closeSheets();
+  if(!started){started=true;S.sessions++;S.first=S.first||new Date().toISOString();S.last=new Date().toISOString();save()}
+}
+feed.addEventListener("scroll",()=>{clearTimeout(feed._t);feed._t=setTimeout(updateCount,60)},{passive:true});
+document.addEventListener("keydown",e=>{
+  if(document.querySelector(".sheet.on")){if(e.key==="Escape")closeSheets();return}
+  if(["ArrowDown","PageDown"," "].includes(e.key)){e.preventDefault();feed.scrollBy({top:feed.clientHeight,behavior:"smooth"})}
+  if(["ArrowUp","PageUp"].includes(e.key)){e.preventDefault();feed.scrollBy({top:-feed.clientHeight,behavior:"smooth"})}
+});
+
+/* ---------- Deck sheet, parent progress ---------- */
+const sheet=document.getElementById("sheet"),fsheet=document.getElementById("fsheet");
+function openSheet(){
+  const up=firstUnfinished();
+  const left=Object.keys(S.miss).length;
+  document.getElementById("decks").innerHTML=
+    STAGES.map(st=>{const b=S.decks[st.id],done=finished(st.id),isUp=up&&up.id===st.id;
+      return `<button class="deck${st.id===cur?" cur":""}${done?" done":""}${isUp?" today":""}" data-k="${st.id}"><span class="day">L<big>${esc(st.lesson)}</big></span><div class="tx"><b>${esc(st.name)}${isUp?' <i class="new">Up next</i>':""}</b><span>${esc(st.power.title)}</span></div><span class="scr">${b&&b.runs?`Best ${b.best}%`:`${checksIn(st.id)} checks`}</span></button>`}).join("")
+    +COMING.map(c=>`<div class="deck soon" aria-disabled="true"><span class="day">L<big>${esc(c.lesson)}</big></span><div class="tx"><b>${esc(c.name)}</b><span>${esc(c.sub)}</span></div></div>`).join("")
+    +(left?`<button class="deck${cur==="missed"?" cur":""}" data-k="missed"><div class="tx"><b>Ones I've missed</b><span>Only the questions you got wrong</span></div><span class="scr">${left}</span></button>`:"");
+  document.querySelectorAll("#sheet button.deck").forEach(b=>b.onclick=()=>start(b.dataset.k));
+  document.getElementById("stats").hidden=true;
+  sheet.classList.add("on");
+}
+function closeSheets(){sheet.classList.remove("on");fsheet.classList.remove("on")}
+document.getElementById("deckbtn").onclick=openSheet;
+document.getElementById("fbtn").onclick=()=>fsheet.classList.add("on");
+document.getElementById("fclose").onclick=closeSheets;
+[sheet,fsheet].forEach(s=>s.addEventListener("click",e=>{if(e.target===s)closeSheets()}));
+document.getElementById("statsbtn").onclick=()=>{
+  const st=document.getElementById("stats");
+  if(!st.hidden){st.hidden=true;return}
+  const fmt=d=>d?new Date(d).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"never";
+  const topics=Object.entries(S.topics).filter(([k])=>byId(k)).map(([k,v])=>[k,v,v.r/(v.r+v.w)]).sort((a,b)=>a[2]-b[2]);
+  const misses=Object.entries(S.miss).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([id])=>CARDS.find(c=>c.id===id)).filter(Boolean);
+  st.innerHTML=`<div class="statrow"><span>Sessions</span><span>${S.sessions}</span></div>
+    <div class="statrow"><span>Last active</span><span>${fmt(S.last)}</span></div>
+    ${STAGES.map(s=>{const d=S.decks[s.id];return `<div class="statrow"><span>${esc(deckName(s.id))}</span><span>${d&&d.runs?`done ×${d.runs} · best ${d.best}%`:"not yet"}</span></div>`}).join("")}
+    ${topics.length?`<p class="small" style="margin:14px 4px 4px">By lesson, weakest first (all answers, including second tries):</p>`+topics.map(([k,v,p])=>`<div class="statrow"><span>${esc(deckName(k))}</span><span>${Math.round(p*100)}% of ${v.r+v.w}</span></div>`).join(""):'<p class="small" style="margin:14px 4px">No answers yet.</p>'}
+    ${misses.length?`<p class="small" style="margin:14px 4px 4px">Still missing:</p>`+misses.map(c=>`<div class="statrow"><span>${esc(c.q)}</span><span>${esc(c.topic)}</span></div>`).join(""):""}
+    <p class="small" style="margin:12px 4px 0">Saved on this device only.</p>`;
+  st.hidden=false;
+};
+
+let first=(firstUnfinished()||STAGES[0]).id;
+const h=location.hash.slice(1);if(h&&byId(h))first=h;
+window.addEventListener("hashchange",()=>{const d=location.hash.slice(1);if(d!==cur&&byId(d))start(d)});
+start(first);
+</script>
+</body>
+</html>

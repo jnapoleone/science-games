@@ -6,6 +6,7 @@ Study games for Grade 9 Science (SNC1W), hosted with GitHub Pages.
 | --- | --- | --- |
 | Chemistry Obby | `/chemistry/` | Unit 1: Chemistry |
 | Electricity Swipe | `/electricity/` | Unit 3: Electricity |
+| Biology Swipe | `/biology/` | Unit 4: Biology (Sustainable Ecosystems) |
 
 Each game is a single self-contained `index.html` in its own folder. Progress is saved in the player's browser (localStorage); nothing is sent anywhere.
 
