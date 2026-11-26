@@ -121,6 +121,8 @@ h2{font-family:var(--display);font-weight:700;font-size:clamp(28px,8vw,38px);lin
   .ex{margin-top:10px;padding:10px 12px;font-size:14px}
 }
 @media (prefers-reduced-motion:reduce){.bar i,.opt{transition:none}}
+body.pm .sheet .p{padding-bottom:80px}
+#pmbadge{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);transform:translateX(-50%);z-index:9999;background:#ffd84a;color:#14161b;border:0;border-radius:999px;padding:8px 16px;font:700 14px system-ui,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.45);cursor:pointer;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -645,11 +647,32 @@ function deckCards(k){
 const deckName=k=>k==="missed"?"Ones I've missed":(PLAN.find(p=>p.k===k)?`${PLAN.find(p=>p.k===k).dow} · ${PLAN.find(p=>p.k===k).name}`:(byId(k).boss?"Unit Review boss":`${byId(k).lesson} ${byId(k).name}`));
 const checksIn=k=>deckCards(k).filter(c=>c.t==="check").length;
 
+
+/* ============ PARENT MODE ============
+   For looking through and testing. While on, NOTHING is saved: his progress on this device isn't changed.
+   Answering does not end it. Ends when you tap Turn off / the yellow pill, or after 30 minutes idle;
+   the page then reloads with his real progress. */
+const PM={
+  K:'electricitySwipe.parentUntil',IDLE:30*60000,last:0,
+  on(){let u=0;try{u=+localStorage.getItem(this.K)||0}catch(e){}return u>Date.now()},
+  start(){try{localStorage.setItem(this.K,String(Date.now()+this.IDLE))}catch(e){}this.last=Date.now();this.badge()},
+  stop(){try{localStorage.removeItem(this.K)}catch(e){}location.reload()},
+  bump(){if(!this.on()){if(document.getElementById('pmbadge'))this.stop();return}const n=Date.now();if(n-this.last<20000)return;this.last=n;try{localStorage.setItem(this.K,String(n+this.IDLE))}catch(e){}},
+  badge(){let b=document.getElementById('pmbadge');document.body.classList.toggle('pm',this.on());if(this.on()){if(!b){b=document.createElement('button');b.id='pmbadge';b.textContent='Parent mode · nothing recorded · tap to turn off';b.onclick=()=>this.stop();document.body.appendChild(b)}}else if(b)b.remove()},
+  box(){const on=this.on();return `<div id="pmbox" style="border:2px solid ${on?'#c9a227':'currentColor'};background:${on?'#fff4c2':'transparent'};color:${on?'#14161b':'inherit'};border-radius:12px;padding:12px;margin:0 0 14px;text-align:left">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><b>Parent mode</b> · ${on?'on':'off'}</span>
+    <button id="pmbtn" type="button" style="font:inherit;font-weight:700;padding:6px 14px;border-radius:999px;border:2px solid currentColor;background:none;color:inherit;cursor:pointer">${on?'Turn off':'Turn on'}</button></div>
+    <p style="margin:8px 0 0;font-size:14px;opacity:.85">${on?'Nothing is being saved to his progress on this device. Answer anything you like. Ends when you tap Turn off or after 30 minutes idle.':'Want to look through or test the questions? Turn this on first so nothing you do counts as his.'}</p></div>`},
+  wire(after){const b=document.getElementById('pmbtn');if(b)b.onclick=()=>{if(this.on())this.stop();else{this.start();after&&after()}}}
+};
+['pointerdown','keydown','touchstart'].forEach(t=>document.addEventListener(t,()=>PM.bump(),{passive:true,capture:true}));
+setInterval(()=>{if(document.getElementById('pmbadge')&&!PM.on())PM.stop()},30000);
+document.addEventListener('DOMContentLoaded',()=>PM.badge());if(document.readyState!=='loading')setTimeout(()=>PM.badge(),0);
 /* ---------- Saved progress (this browser only) ---------- */
 const KEY="electricitySwipe.v1";
 let S={sessions:0,first:null,last:null,topics:{},miss:{},decks:{}};
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==="object")S=Object.assign(S,s)}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const save=()=>{if(PM.on())return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const finished=k=>!!(S.decks[k]&&S.decks[k].runs>0);
 /* A day counts as done once its own deck is finished, or every lesson in it is. */
 const dayDone=p=>finished(p.k)||p.lessons.every(finished);
@@ -744,7 +767,7 @@ function start(deck){
   feed.scrollTop=0;document.getElementById("deckname").textContent=deckName(deck);
   hint.style.opacity=1;updateCount();closeSheets();
   if(!started){started=true;S.sessions++;S.first=S.first||new Date().toISOString();S.last=new Date().toISOString();save()}
-  try{localStorage.setItem(KEY+".deck",deck)}catch(e){}
+  if(!PM.on())try{localStorage.setItem(KEY+".deck",deck)}catch(e){}
 }
 feed.addEventListener("scroll",()=>{clearTimeout(feed._t);feed._t=setTimeout(updateCount,60)},{passive:true});
 document.addEventListener("keydown",e=>{
@@ -788,13 +811,14 @@ document.getElementById("statsbtn").onclick=()=>{
   const fmt=d=>d?new Date(d).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"never";
   const topics=Object.entries(S.topics).filter(([k])=>byId(k)).map(([k,v])=>[k,v,v.r/(v.r+v.w)]).sort((a,b)=>a[2]-b[2]);
   const misses=Object.entries(S.miss).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([id])=>CARDS.find(c=>c.id===id)).filter(Boolean);
-  st.innerHTML=`<div class="statrow"><span>Sessions</span><span>${S.sessions}</span></div>
+  st.innerHTML=PM.box()+`<div class="statrow"><span>Sessions</span><span>${S.sessions}</span></div>
     <div class="statrow"><span>Last active</span><span>${fmt(S.last)}</span></div>
     ${PLAN.map(p=>{const d=S.decks[p.k];return `<div class="statrow"><span>${p.dow} · ${esc(p.name)}</span><span>${dayDone(p)?(d&&d.runs?`done · best ${d.best}%`:"done (by lesson)"):`${p.lessons.filter(finished).length}/${p.lessons.length} lessons`}</span></div>`}).join("")}
     ${topics.length?`<p class="small" style="margin:14px 4px 4px">By lesson, weakest first (all answers, including second tries):</p>`+topics.map(([k,v,p])=>{const s=byId(k);return `<div class="statrow"><span>${esc(s.boss?"Unit Review boss":s.lesson+" "+s.name)}</span><span>${Math.round(p*100)}% of ${v.r+v.w}</span></div>`}).join(""):'<p class="small" style="margin:14px 4px">No answers yet.</p>'}
     ${misses.length?`<p class="small" style="margin:14px 4px 4px">Still missing:</p>`+misses.map(c=>`<div class="statrow"><span>${esc(c.q)}</span><span>${esc(c.topic)}</span></div>`).join(""):""}
     <p class="small" style="margin:12px 4px 0">Saved on this device only.</p>`;
   st.hidden=false;
+  PM.wire(()=>{const b=document.getElementById("pmbox");if(b){b.outerHTML=PM.box();PM.wire()}});
 };
 
 let first=todayPlan().k;

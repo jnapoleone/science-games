@@ -148,6 +148,8 @@ th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted
 .avatar .l{position:absolute;left:12px;top:56px;width:30px;height:14px;background:var(--grass-dark);border:3px solid var(--ink);border-top:0}
 @media (prefers-reduced-motion:no-preference){.avatar.jump{animation:jump .6s ease-in-out infinite alternate}}
 @keyframes jump{to{transform:translateY(-10px)}}
+body.pm #app{padding-bottom:70px}
+#pmbadge{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);transform:translateX(-50%);z-index:9999;background:#ffd84a;color:#14161b;border:0;border-radius:999px;padding:8px 16px;font:700 14px system-ui,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.45);cursor:pointer;white-space:nowrap}
 </style>
 
 <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
@@ -402,10 +404,31 @@ const STAGES = [
 ];
 
 
+
+/* ============ PARENT MODE ============
+   For looking through and testing. While on, NOTHING is saved: his progress on this device isn't changed.
+   Answering does not end it. Ends when you tap Turn off / the yellow pill, or after 30 minutes idle;
+   the page then reloads with his real progress. */
+const PM={
+  K:'chemObby.parentUntil',IDLE:30*60000,last:0,
+  on(){let u=0;try{u=+localStorage.getItem(this.K)||0}catch(e){}return u>Date.now()},
+  start(){try{localStorage.setItem(this.K,String(Date.now()+this.IDLE))}catch(e){}this.last=Date.now();this.badge()},
+  stop(){try{localStorage.removeItem(this.K)}catch(e){}location.reload()},
+  bump(){if(!this.on()){if(document.getElementById('pmbadge'))this.stop();return}const n=Date.now();if(n-this.last<20000)return;this.last=n;try{localStorage.setItem(this.K,String(n+this.IDLE))}catch(e){}},
+  badge(){let b=document.getElementById('pmbadge');document.body.classList.toggle('pm',this.on());if(this.on()){if(!b){b=document.createElement('button');b.id='pmbadge';b.textContent='Parent mode · nothing recorded · tap to turn off';b.onclick=()=>this.stop();document.body.appendChild(b)}}else if(b)b.remove()},
+  box(){const on=this.on();return `<div id="pmbox" style="border:2px solid ${on?'#c9a227':'currentColor'};background:${on?'#fff4c2':'transparent'};color:${on?'#14161b':'inherit'};border-radius:12px;padding:12px;margin:0 0 14px;text-align:left">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span><b>Parent mode</b> · ${on?'on':'off'}</span>
+    <button id="pmbtn" type="button" style="font:inherit;font-weight:700;padding:6px 14px;border-radius:999px;border:2px solid currentColor;background:none;color:inherit;cursor:pointer">${on?'Turn off':'Turn on'}</button></div>
+    <p style="margin:8px 0 0;font-size:14px;opacity:.85">${on?'Nothing is being saved to his progress on this device. Answer anything you like. Ends when you tap Turn off or after 30 minutes idle.':'Want to look through or test the questions? Turn this on first so nothing you do counts as his.'}</p></div>`},
+  wire(after){const b=document.getElementById('pmbtn');if(b)b.onclick=()=>{if(this.on())this.stop();else{this.start();after&&after()}}}
+};
+['pointerdown','keydown','touchstart'].forEach(t=>document.addEventListener(t,()=>PM.bump(),{passive:true,capture:true}));
+setInterval(()=>{if(document.getElementById('pmbadge')&&!PM.on())PM.stop()},30000);
+document.addEventListener('DOMContentLoaded',()=>PM.badge());if(document.readyState!=='loading')setTimeout(()=>PM.badge(),0);
 /* ============ STATE ============ */
 const KEY="chemObby.v1";
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.stages)return s}catch(e){}return{coins:0,stages:{},missed:{},log:[]}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){if(PM.on())return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let S=load();
 let DB=null;
 
@@ -414,7 +437,7 @@ const app=$("#app");
 let view="map", run=null;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-const unlocked=i=>i===0||!!(S.stages[STAGES[i-1].id]&&S.stages[STAGES[i-1].id].best>0);
+const unlocked=i=>PM.on()||i===0||!!(S.stages[STAGES[i-1].id]&&S.stages[STAGES[i-1].id].best>0);
 const starsHTML=(n,max=3)=>Array.from({length:max},(_,i)=>`<i class="star ${i<n?"on":""}"></i>`).join("");
 const heartsHTML=(n,max=3)=>Array.from({length:max},(_,i)=>`<i class="heart ${i<n?"":"gone"}"></i>`).join("");
 function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),1000)}
@@ -534,6 +557,7 @@ async function reportView(){
   const fmt=t=>{try{return new Date(t).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}catch(e){return t}};
   app.innerHTML = hud() + `<div class="run">
    <div class="stagehead">PROGRESS REPORT</div>
+   <div class="panel" style="margin-bottom:14px">${PM.box()}<p class="note" style="margin:0">${PM.on()?"All stages are unlocked while Parent mode is on.":"Turning it on also unlocks every stage so you can try any of them."}</p></div>
    <div class="panel"><h2>Stages</h2><div class="tablewrap"><table><thead><tr><th>Stage</th><th>Stars</th><th>Best</th><th>Tries</th><th>Last</th></tr></thead><tbody>
    ${STAGES.map(s=>{const r=S.stages[s.id];return `<tr><td>${esc(s.name)}</td><td><span class="stars">${starsHTML(r?r.best:0)}</span></td><td>${r?`${r.bestScore}/${s.qs.length}`:"—"}</td><td>${r?r.attempts:0}</td><td>${r&&r.last?fmt(r.last):"—"}</td></tr>`}).join("")}
    </tbody></table></div><p class="note">Progress is saved in this browser on this device. ${S.log.length} runs played, ${S.coins} coins.</p></div>
@@ -541,6 +565,7 @@ async function reportView(){
    <button class="big alt" id="map">Back to map</button></div>`;
   $("#map").onclick=()=>{view="map";render()};
   $("#rep").onclick=()=>{};
+  PM.wire(()=>render());
 }
 
 render();
