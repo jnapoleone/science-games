@@ -425,6 +425,42 @@ const PM={
 ['pointerdown','keydown','touchstart'].forEach(t=>document.addEventListener(t,()=>PM.bump(),{passive:true,capture:true}));
 setInterval(()=>{if(document.getElementById('pmbadge')&&!PM.on())PM.stop()},30000);
 document.addEventListener('DOMContentLoaded',()=>PM.badge());if(document.readyState!=='loading')setTimeout(()=>PM.badge(),0);
+
+/* ============ PARENT SYNC → Google Sheet "Sebastian Science progress" ============
+   Same sheet and columns as Biology Swipe: received_at, at, device, app, kind, item, result, value, event_id.
+   Events queue in this browser and send in batches; nothing is sent while Parent mode is on. */
+const SYNC_URL='https://script.google.com/macros/s/AKfycbyfIdk8HRTSDfdA7hsgoI2300RxOVMcJEwDwO5XCWy9UzwEuO-qoDtfjjCl3mnFQDtc5A/exec';
+const SYNC_APP='chemistry';
+const SYNC={
+  dev:(()=>{try{let d=localStorage.getItem('scienceDevice');if(!d){d=[...crypto.getRandomValues(new Uint8Array(6))].map(b=>b.toString(16).padStart(2,'0')).join('');localStorage.setItem('scienceDevice',d)}return d}catch(e){return 'nostorage000'}})(),
+  n:0,t:null,
+  q(){try{return JSON.parse(localStorage.getItem('scienceSyncQueue'))||[]}catch(e){return[]}},
+  setq(a){try{localStorage.setItem('scienceSyncQueue',JSON.stringify(a.slice(-2000)))}catch(e){}},
+  log(kind,item,result,value,id,at){
+    if(!SYNC_URL||PM.on())return;
+    const ev={at:at||new Date().toISOString(),device:this.dev,app:SYNC_APP,kind,item:item||'',result:result||'',value:value==null?'':String(value),event_id:id||(this.dev+'-'+Date.now().toString(36)+'-'+(this.n++))};
+    const a=this.q();a.push(ev);this.setq(a);
+    clearTimeout(this.t);this.t=setTimeout(()=>this.flush(),2500);
+  },
+  flush(){
+    if(!SYNC_URL||this.busy)return;const a=this.q();if(!a.length)return;
+    const batch=a.slice(0,200);this.busy=true;
+    fetch(SYNC_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({events:batch}),keepalive:true})
+      .then(()=>{const ids=new Set(batch.map(e=>e.event_id));this.setq(this.q().filter(e=>!ids.has(e.event_id)));try{localStorage.setItem('scienceSyncLast',Date.now())}catch(e){}})
+      .catch(()=>{}).finally(()=>{this.busy=false;if(this.q().length&&this.q().length!==a.length)setTimeout(()=>this.flush(),1000)});
+  },
+  backfill(){ // one-time copy of progress made before syncing was switched on
+    if(!SYNC_URL||PM.on())return;try{if(localStorage.getItem('scienceSyncBackfill.'+SYNC_APP))return}catch(e){return}
+    const at=new Date().toISOString(),bf=k=>'bf-'+this.dev+'-'+k+'-'+SYNC_APP;
+    STAGES.forEach(s=>{const r=S.stages[s.id];if(r&&r.attempts)this.log('past_deck',s.id,r.clears?'cleared':'','best'+r.bestScore+'of'+s.qs.length+'stars'+r.best+'runs'+r.attempts,bf('past_deck-'+s.id),at)});
+    Object.entries(S.missed).forEach(([id,n])=>this.log('past_miss',id,'',n,bf('past_miss-'+id),at));
+    if(S.log.length)this.log('past_sessions','','',S.log.length,bf('past_sessions'),at);
+    try{localStorage.setItem('scienceSyncBackfill.'+SYNC_APP,'1')}catch(e){}
+  },
+  status(){if(!SYNC_URL)return 'Parent sheet: not connected';let t=0;try{t=+localStorage.getItem('scienceSyncLast')}catch(e){}const q=this.q().length;
+    return 'Parent sheet: connected · last sent '+(t?new Date(t).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'not yet')+(q?' · '+q+' waiting to send':'')}
+};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')SYNC.flush()});
 /* ============ STATE ============ */
 const KEY="chemObby.v1";
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.stages)return s}catch(e){}return{coins:0,stages:{},missed:{},log:[]}}
@@ -472,6 +508,7 @@ function mapView(){
 function startStage(i){
   const st=STAGES[i];
   run={i,stage:st,qs:shuffle(st.qs),k:0,hearts:st.boss?2:3,max:st.boss?2:3,correct:0,streak:0,coins:0,missed:[],answered:false};
+  SYNC.log("start",st.id);
   view="power";render();
 }
 
@@ -507,6 +544,7 @@ function answer(j){
   if(run.answered)return; run.answered=true;
   const q=run.qs[run.k]; const pick=q._c[j]; const ok=pick===q.a;
   app.querySelectorAll(".choice").forEach((b,i)=>{b.disabled=true;const c=q._c[i];if(c===q.a)b.classList.add("right");else if(i===j)b.classList.add("wrong");else b.classList.add("dim")});
+  SYNC.log("answer",q.id,ok?"right":"wrong","first");
   if(ok){run.correct++;run.streak++;const gain=run.streak>=3?20:10;run.coins+=gain;S.coins+=gain;toast(`+${gain}`)}
   else{run.streak=0;run.hearts--;run.missed.push(q.id);S.missed[q.id]=(S.missed[q.id]||0)+1;buzz();
     const qc=$("#qc");qc.classList.remove("shake");void qc.offsetWidth;qc.classList.add("shake");
@@ -530,6 +568,7 @@ function finish(cleared){
   const entry={at:new Date().toISOString(),stage:st.id,stageName:st.name,correct:run.correct,total:run.qs.length,cleared,stars,missed:run.missed.slice()};
   S.log.unshift(entry); S.log=S.log.slice(0,60); save();
   if(DB){DB.collection("runs").add(entry).catch(()=>{})}
+  SYNC.log("finish",st.id,cleared?"cleared":"fell",run.correct+"of"+run.qs.length+(cleared?" "+stars+"stars":""));
   run.stars=stars; run.cleared=cleared; view="end"; render();
 }
 
@@ -560,7 +599,7 @@ async function reportView(){
    <div class="panel" style="margin-bottom:14px">${PM.box()}<p class="note" style="margin:0">${PM.on()?"All stages are unlocked while Parent mode is on.":"Turning it on also unlocks every stage so you can try any of them."}</p></div>
    <div class="panel"><h2>Stages</h2><div class="tablewrap"><table><thead><tr><th>Stage</th><th>Stars</th><th>Best</th><th>Tries</th><th>Last</th></tr></thead><tbody>
    ${STAGES.map(s=>{const r=S.stages[s.id];return `<tr><td>${esc(s.name)}</td><td><span class="stars">${starsHTML(r?r.best:0)}</span></td><td>${r?`${r.bestScore}/${s.qs.length}`:"—"}</td><td>${r?r.attempts:0}</td><td>${r&&r.last?fmt(r.last):"—"}</td></tr>`}).join("")}
-   </tbody></table></div><p class="note">Progress is saved in this browser on this device. ${S.log.length} runs played, ${S.coins} coins.</p></div>
+   </tbody></table></div><p class="note">Progress is saved on this device and sent to the parent progress sheet. ${S.log.length} runs played, ${S.coins} coins.<br>${SYNC.status()}</p></div>
    <div class="panel"><h2>Keeps missing</h2>${tough.length?tough.map(([id,n])=>{const q=allQ[id];return `<div class="miss"><b>${esc(q.stage)}</b> · missed ${n}×<br>${esc(q.q)}<small>✓ ${esc(q.a)}</small></div>`}).join(""):`<p class="note">Nothing missed yet. Play a stage and tricky questions show up here.</p>`}</div>
    <button class="big alt" id="map">Back to map</button></div>`;
   $("#map").onclick=()=>{view="map";render()};
@@ -568,7 +607,9 @@ async function reportView(){
   PM.wire(()=>render());
 }
 
+SYNC.log("open");SYNC.backfill();
 render();
+SYNC.flush();
 </script>
 
 
