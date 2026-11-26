@@ -77,6 +77,12 @@ h2.q{font-size:22px;line-height:1.3;font-weight:600}
 .row.dark{background:#0a0b0d;border-color:var(--lime)}
 .row.dark .c{background:var(--lime);color:#0e0f12}
 details.par{margin-top:18px;border:1px solid var(--line);border-radius:15px;background:var(--card)}
+.pm{border:1px solid var(--line);border-radius:12px;padding:12px;margin:0 0 14px}
+.pm.on{border-color:#6b5a22;background:#2a2412}
+.pm .hd{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pm button{font:600 14px 'Space Grotesk',sans-serif;padding:6px 14px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;cursor:pointer}
+.pm p{margin:8px 0 0;color:var(--mute);font-size:14px}
+#pmbadge{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 10px);transform:translateX(-50%);z-index:30;background:#ffd84a;color:#14161b;border:0;border-radius:999px;padding:8px 16px;font:700 14px 'Space Grotesk',sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.5);cursor:pointer;white-space:nowrap}
 details.par summary{padding:14px;font:600 15px 'Space Grotesk',sans-serif;cursor:pointer;list-style:none}
 details.par summary:after{content:" ▸";color:var(--mute)}details.par[open] summary:after{content:" ▾"}
 .pbody{padding:0 14px 14px;font-size:14px;color:var(--soft)}
@@ -291,13 +297,29 @@ const WORDS=[
    Paste the Apps Script web-app URL (ends in /exec) between the quotes. Empty = no syncing; the game still works. */
 const SYNC_URL='https://script.google.com/macros/s/AKfycbyfIdk8HRTSDfdA7hsgoI2300RxOVMcJEwDwO5XCWy9UzwEuO-qoDtfjjCl3mnFQDtc5A/exec';
 const SYNC_APP='biology';
+
+/* ============ PARENT MODE ============
+   For looking through and testing decks. While on, NOTHING is recorded: no events go to the progress sheet
+   and his saved progress in this browser isn't changed (answers only live in memory). Answering does not end it.
+   Ends when you tap Turn off / the yellow pill, or after 30 minutes idle; his real progress is then reloaded. */
+const PM={
+  K:'biologySwipe.parentUntil',IDLE:30*60000,last:0,
+  on(){let u=0;try{u=+localStorage.getItem(this.K)||0}catch(e){}return u>Date.now()},
+  start(){SYNC.flush();try{localStorage.setItem(this.K,String(Date.now()+this.IDLE))}catch(e){}this.last=Date.now();this.badge()},
+  stop(){try{localStorage.removeItem(this.K)}catch(e){}this.badge();
+    if(typeof load==='function'){S=load();closeSheets();startDeck(firstUnfinished())}},
+  bump(){if(!this.on()){if(document.getElementById('pmbadge'))this.stop();return}const n=Date.now();if(n-this.last<20000)return;this.last=n;try{localStorage.setItem(this.K,String(n+this.IDLE))}catch(e){}},
+  badge(){let b=document.getElementById('pmbadge');if(this.on()){if(!b){b=document.createElement('button');b.id='pmbadge';b.textContent='Parent mode · nothing recorded · tap to turn off';b.onclick=()=>this.stop();document.body.appendChild(b)}}else if(b)b.remove()}
+};
+['pointerdown','keydown','touchstart'].forEach(t=>document.addEventListener(t,()=>PM.bump(),{passive:true,capture:true}));
+setInterval(()=>{if(document.getElementById('pmbadge')&&!PM.on())PM.stop()},30000);
 const SYNC={
   dev:(()=>{try{let d=localStorage.getItem('scienceDevice');if(!d){d=[...crypto.getRandomValues(new Uint8Array(6))].map(b=>b.toString(16).padStart(2,'0')).join('');localStorage.setItem('scienceDevice',d)}return d}catch(e){return 'nostorage000'}})(),
   n:0,t:null,
   q(){try{return JSON.parse(localStorage.getItem('scienceSyncQueue'))||[]}catch(e){return[]}},
   setq(a){try{localStorage.setItem('scienceSyncQueue',JSON.stringify(a.slice(-2000)))}catch(e){}},
   log(kind,item,result,value,id,at){
-    if(!SYNC_URL)return;
+    if(!SYNC_URL||PM.on())return;
     const ev={at:at||new Date().toISOString(),device:this.dev,app:SYNC_APP,kind,item:item||'',result:result||'',value:value==null?'':String(value),event_id:id||(this.dev+'-'+Date.now().toString(36)+'-'+(this.n++))};
     const a=this.q();a.push(ev);this.setq(a);
     clearTimeout(this.t);this.t=setTimeout(()=>this.flush(),2500);
@@ -310,7 +332,7 @@ const SYNC={
       .catch(()=>{}).finally(()=>{this.busy=false;if(this.q().length&&this.q().length!==a.length)setTimeout(()=>this.flush(),1000)});
   },
   backfill(){ // one-time copy of progress made before syncing was switched on
-    if(!SYNC_URL)return;try{if(localStorage.getItem('scienceSyncBackfill.'+SYNC_APP))return}catch(e){return}
+    if(!SYNC_URL||PM.on())return;try{if(localStorage.getItem('scienceSyncBackfill.'+SYNC_APP))return}catch(e){return}
     const at=new Date().toISOString(),bf=k=>'bf-'+this.dev+'-'+k+'-'+SYNC_APP;let any=false;
     DECKS.forEach(d=>{const s=S.decks[d.id];if(!s)return;let r=0,w=0;qOf(d).forEach(q=>{const L=S.log[q.id];if(L){r+=L.r;w+=L.w}});
       if(r+w){any=true;this.log('past_topic',d.id,'','r'+r+'w'+w,bf('past_topic-'+d.id),at)}
@@ -331,7 +353,7 @@ const qOf=d=>d.cards.filter(c=>c.t==='q');
 
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.v===2)return s}catch(e){}return{v:2,decks:{},missed:{},log:{},boss:{runs:0,best:null}}}
 let S=load();
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){if(PM.on())return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function st(id){return S.decks[id]||(S.decks[id]={right:{},first:{},done:false,runs:0,last:0})}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const $=id=>document.getElementById(id);
@@ -480,15 +502,18 @@ function openSheet(){
     rows+=`<tr><td>${d.code} ${d.title}</td><td class="n">${s.done?'✓':Object.keys(s.right).length+'/'+q.length}</td><td class="n">${f.length?Math.round(fr/f.length*100)+'%':'–'}</td><td class="n">${fmtDate(s.last)}</td></tr>`});
   const worst=Object.entries(S.log).filter(([k,v])=>v.w>0&&QMAP[k]).sort((a,b)=>b[1].w-a[1].w||a[1].r-b[1].r).slice(0,8);
   h+=`<details class="par"><summary>Progress (for parents)</summary><div class="pbody">
+   ${PM.on()?`<div class="pm on"><div class="hd"><span><b>Parent mode</b> · on</span><button id="pmbtn">Turn off</button></div><p>Nothing is being recorded: not to the progress sheet, not to his progress on this device. Answer anything you like. Ends when you tap Turn off or after 30 minutes idle.</p></div>`
+     :`<div class="pm"><div class="hd"><span><b>Parent mode</b> · off</span><button id="pmbtn">Turn on</button></div><p>Want to look through or test the decks? Turn this on first so nothing you do is recorded as his.</p></div>`}
    <p>Saved in this browser only. First-try % counts each question's very first answer.</p>
    <table><tr><th>Deck</th><th class="n">Right</th><th class="n">1st try</th><th class="n">Last played</th></tr>${rows}</table>
    <p><b>Overall first try:</b> ${totRight?Math.round(totFirst/totRight*100)+'% of '+totRight+' answered':'nothing yet'} · <b>Boss:</b> ${S.boss.runs?S.boss.runs+' cleared, best '+S.boss.best+'/20':'not cleared yet'} · <b>Missed pile:</b> ${nMiss}</p>
    ${worst.length?`<p><b>Most missed</b></p><ol>${worst.map(([k,v])=>`<li>${QMAP[k].q} <span style="color:var(--mute)">(${DECK[QDECK[k]].code}, wrong ${v.w}×, right ${v.r}×)</span></li>`).join('')}</ol>`:''}
    <p style="color:var(--mute)">${SYNC_URL?(()=>{let t=0;try{t=+localStorage.getItem('scienceSyncLast')}catch(e){};const q=SYNC.q().length;return 'Parent sheet: connected · last sent '+(t?fmtDate(t):'not yet')+(q?' · '+q+' waiting to send':'')})():'Parent sheet: not connected'}</p>
-   <button class="reset" id="reset">Reset all progress</button></div></details>`;
+   ${PM.on()?'':'<button class="reset" id="reset">Reset all progress</button>'}</div></details>`;
   $('sheet').innerHTML=h;
   $('sheet').querySelectorAll('[data-deck]').forEach(b=>b.onclick=()=>startDeck(b.dataset.deck));
-  let armed=false;$('reset').onclick=e=>{if(!armed){armed=true;e.target.textContent='Tap again to erase everything';return}S={v:2,decks:{},missed:{},log:{},boss:{runs:0,best:null}};save();startDeck(firstUnfinished())};
+  $('pmbtn').onclick=()=>{if(PM.on())PM.stop();else{PM.start();openSheet();$('sheet').querySelector('details.par').open=true}};
+  let armed=false;if($('reset'))$('reset').onclick=e=>{if(!armed){armed=true;e.target.textContent='Tap again to erase everything';return}S={v:2,decks:{},missed:{},log:{},boss:{runs:0,best:null}};save();startDeck(firstUnfinished())};
   $('sheet').classList.add('on');$('veil').classList.add('on');
 }
 function openWords(){
@@ -498,7 +523,7 @@ function openWords(){
 $('deckbtn').onclick=openSheet;$('sheetbtn').onclick=openSheet;$('wordsbtn').onclick=openWords;$('veil').onclick=closeSheets;
 window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(h&&h!==cur&&meta(h))startDeck(h)});
 
-SYNC.log('open');SYNC.backfill();
+PM.badge();SYNC.log('open');SYNC.backfill();
 startDeck(location.hash.slice(1)||firstUnfinished());
 SYNC.flush();
 </script>
