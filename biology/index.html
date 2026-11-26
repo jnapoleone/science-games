@@ -1,418 +1,506 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Biology Swipe</title>
-<meta name="robots" content="noindex">
 <meta name="theme-color" content="#0e0f12">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Biology">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e0f12'/%3E%3Cpath d='M48 14C26 14 14 26 16 48c22 2 34-10 32-34zM18 46 38 26' fill='none' stroke='%23d4ff3a' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<title>Biology Swipe · Sustainable Ecosystems</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-/* Same look as English Swipe and Electricity Swipe: dark, one card per screen, swipe up. */
-:root{
-  --bg:#0e0f12; --card:#17191e; --card2:#1f2229; --line:#2b2f38; --text:#f2f3f5; --dim:#9aa1ad; --faint:#6b7280;
-  --accent:#d4ff3a; --good:#4ade80; --bad:#ff6b6b; --test:#ff9f43;
-  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
-  color-scheme:dark;
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.5}
-button{font:inherit;color:inherit}
-
-/* Top bar */
-.top{position:fixed;inset:0 0 auto 0;z-index:20;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;
-  background:linear-gradient(var(--bg) 60%,rgba(14,15,18,0));pointer-events:none}
-.top .in{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:10px;pointer-events:auto}
-.home,.tool{width:34px;height:34px;flex:none;display:grid;place-items:center;border-radius:10px;color:var(--dim);text-decoration:none;border:1px solid var(--line);background:none;cursor:pointer;padding:0}
-.tool{width:auto;padding:0 10px;font-family:var(--display);font-weight:700;font-size:13px;color:var(--accent)}
-.deckbtn{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:none;border:0;padding:0;cursor:pointer;text-align:left}
-.deckbtn b{font-family:var(--display);font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.deckbtn svg{flex:none;color:var(--dim)}
-.count{font-family:var(--display);font-size:14px;color:var(--dim);font-variant-numeric:tabular-nums}
-.bar{max-width:520px;margin:8px auto 0;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
-
-/* Feed */
-.feed{height:100%;height:100dvh;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none}
-.feed::-webkit-scrollbar{display:none}
-.slide{height:100%;height:100dvh;scroll-snap-align:start;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;
-  padding:calc(env(safe-area-inset-top,0px) + 70px) 16px calc(env(safe-area-inset-bottom,0px) + 34px)}
-.c{width:100%;max-width:520px;max-height:100%;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px 22px;scrollbar-width:none}
-.c::-webkit-scrollbar{display:none}
-.kick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
-.kick .r{color:var(--accent)}
-h2{font-family:var(--display);font-weight:700;font-size:clamp(28px,8vw,38px);line-height:1.05;margin:0 0 14px;letter-spacing:-.01em;text-wrap:balance}
-.q{font-family:var(--display);font-weight:500;font-size:clamp(21px,5.6vw,25px);line-height:1.25;margin:0 0 18px;text-wrap:pretty}
-.sc{font-size:15px;color:#d6d9df;background:var(--card2);border-left:3px solid var(--accent);border-radius:0 12px 12px 0;padding:10px 12px;margin:0 0 14px}
-.c p{margin:0 0 12px}.c p:last-child{margin-bottom:0}
-.c ul,.c ol{margin:0 0 12px;padding-left:20px}.c li{margin-bottom:6px}
-.c li b,.c p b{color:var(--accent);font-weight:600}
-.ex{background:var(--card2);border-radius:14px;padding:12px 14px;margin-top:14px;font-size:15px;color:#d6d9df}
-.ex b{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:4px;font-weight:600}
-.ex b.k{display:inline;font-size:inherit;letter-spacing:0;text-transform:none;color:var(--accent)}
-.opts{display:grid;gap:10px}
-.opt{text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:13px 15px;cursor:pointer;font-size:16px;line-height:1.35;transition:border-color .15s,background .15s}
-.opt:active{transform:scale(.99)}
-.opt:focus-visible,.deckbtn:focus-visible,.btn:focus-visible,.tool:focus-visible,.home:focus-visible,.deck:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.opt[disabled]{cursor:default}
-.opt.right{border-color:var(--good);background:rgba(74,222,128,.12)}
-.opt.wrong{border-color:var(--bad);background:rgba(255,107,107,.1)}
-.opt.fade{opacity:.45}
-.why{display:none;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:15px;color:#d6d9df}
-.why.on{display:block}
-.why strong{font-family:var(--display);display:block;font-size:17px;margin-bottom:4px}
-.why .ok{color:var(--good)}.why .no{color:var(--bad)}
-.hint{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);text-align:center;font-size:12px;color:var(--faint);pointer-events:none;transition:opacity .3s}
-.btn{display:block;width:100%;text-align:center;border-radius:14px;padding:14px;margin-top:10px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:var(--card2);text-decoration:none;color:var(--text)}
-.btn.main{background:var(--accent);color:#111;border-color:var(--accent)}
-.big{font-family:var(--display);font-weight:700;font-size:56px;line-height:1;margin:6px 0 4px;font-variant-numeric:tabular-nums}
-.small{font-size:14px;color:var(--dim)}
-
-/* Sheets */
-.sheet{position:fixed;inset:0;z-index:40;display:none;background:rgba(0,0,0,.6);align-items:flex-end;justify-content:center}
-.sheet.on{display:flex}
-.sheet .p{width:100%;max-width:520px;max-height:88dvh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:22px 22px 0 0;
-  padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px)}
-.sheet h3{font-family:var(--display);font-size:20px;margin:4px 4px 4px}
-.sheet h4{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:18px 4px 8px}
-.subline{margin:0 4px 6px;font-size:14px;color:var(--dim)}
-.deck{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:8px;cursor:pointer}
-.deck .day{flex:none;width:46px;text-align:center;font-family:var(--display);font-weight:700;font-size:12px;line-height:1.15;color:var(--dim);border:1px solid var(--line);border-radius:10px;padding:6px 0}
-.deck .day big{display:block;font-size:19px;color:var(--text)}
-.deck.today .day{border-color:var(--accent);color:var(--accent)}
-.deck.done .day{border-color:var(--good);color:var(--good)}
-.deck .tx{flex:1;min-width:0}
-.deck b{display:block;font-family:var(--display);font-size:17px}
-.deck span{display:block;font-size:13px;color:var(--dim)}
-.deck .scr{font-family:var(--display);font-size:13px;color:var(--dim);white-space:nowrap}
-.deck.cur{border-color:var(--accent)}
-.deck.soon{cursor:default;opacity:.5;border-style:dashed}
-.deck i.new{font-style:normal;font-family:var(--body);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:#111;border-radius:6px;padding:2px 6px;vertical-align:2px;margin-left:4px;white-space:nowrap;display:inline-block}
-.statrow{display:flex;justify-content:space-between;gap:12px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:15px}
-.statrow:last-child{border-bottom:0}
-.statrow span:last-child{color:var(--dim);font-variant-numeric:tabular-nums;text-align:right}
-.linkish{background:none;border:0;color:var(--dim);text-decoration:underline;cursor:pointer;padding:10px 4px;font-size:14px}
-
-/* Word sheet */
-.gl{display:grid;gap:0}
-.gl div{padding:9px 4px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.45;color:#d6d9df}
-.gl div:last-child{border-bottom:0}
-.gl b{font-family:var(--display);font-weight:700;color:var(--accent);margin-right:6px;font-size:15px}
-.gl em{font-style:normal;color:var(--faint)}
-.rules{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.rules div{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;font-size:14px;line-height:1.5}
-.rules b{display:block;font-family:var(--display);font-size:15px;color:var(--accent);margin-bottom:4px}
-
-@media (max-height:720px){
-  html,body{font-size:15px;line-height:1.42}
-  .slide{padding-top:calc(env(safe-area-inset-top,0px) + 62px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 22px)}
-  .c{padding:18px 18px}
-  h2{font-size:26px;margin-bottom:10px}
-  .kick{margin-bottom:10px}
-  .c li{margin-bottom:3px}
-  .ex{margin-top:10px;padding:10px 12px;font-size:14px}
-}
-@media (prefers-reduced-motion:reduce){.bar i,.opt{transition:none}}
+:root{--bg:#0e0f12;--card:#17191f;--card2:#1e2128;--line:#2a2d36;--ink:#f2f3f5;--soft:#d3d6dc;--mute:#8d939e;--lime:#d4ff3a;--red:#ff5c6c;--top:calc(env(safe-area-inset-top) + 74px)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.top{position:fixed;top:0;left:0;right:0;z-index:5;padding:calc(env(safe-area-inset-top) + 10px) 14px 0;display:flex;align-items:center;gap:8px;max-width:600px;margin:0 auto}
+.deckbtn{flex:1;display:flex;flex-direction:column;align-items:flex-start;min-width:0;text-align:left;padding:2px 0}
+.deckbtn .k{font:600 11px/1.2 'Space Grotesk',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--lime)}
+.deckbtn .n{font:600 18px/1.3 'Space Grotesk',sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.deckbtn .n:after{content:" ▾";color:var(--mute);font-size:13px}
+.ic{width:42px;height:42px;border-radius:13px;background:var(--card);border:1px solid var(--line);font:700 15px 'Space Grotesk',sans-serif;display:grid;place-items:center;flex:none}
+.bar{position:fixed;top:calc(env(safe-area-inset-top) + 62px);left:14px;right:14px;max-width:572px;margin:0 auto;height:4px;border-radius:4px;background:var(--line);z-index:5;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--lime);transition:width .35s}
+.card{position:fixed;top:var(--top);bottom:calc(env(safe-area-inset-bottom) + 14px);left:14px;right:14px;max-width:572px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:26px;padding:28px 22px 84px;display:flex;flex-direction:column;overflow-y:auto;transition:transform .38s cubic-bezier(.2,.8,.2,1),opacity .38s}
+.card.in{transform:translateY(105%);opacity:0}
+.card.out{transform:translateY(-108%);opacity:0;pointer-events:none}
+.card.warn{border-color:var(--lime);box-shadow:0 0 0 1px var(--lime) inset}
+.tag{font:600 12px/1 'Space Grotesk',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--lime);margin-bottom:14px}
+.tag.m{color:var(--mute)}
+h2{font:700 27px/1.15 'Space Grotesk',sans-serif;margin-bottom:16px;letter-spacing:-.01em}
+h2.q{font-size:22px;line-height:1.3;font-weight:600}
+.card p,.card li{font-size:17px;line-height:1.5;color:var(--soft)}
+.card p+p{margin-top:12px}
+.card ul{padding-left:20px;margin-top:8px}.card li{margin:6px 0}
+.card b{color:var(--ink)}
+.big{font:700 54px/1 'Space Grotesk',sans-serif;color:var(--lime);margin:6px 0 14px}
+.chain{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:12px 0;font:600 15px 'Space Grotesk',sans-serif}
+.chain span{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:7px 10px}
+.chain em{color:var(--lime);font-style:normal}
+.opts{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.opts button{text-align:left;background:var(--card2);border:1px solid var(--line);border-radius:15px;padding:15px 16px;font-size:16px;line-height:1.35;transition:background .15s,border-color .15s}
+.opts button:active{transform:scale(.99)}
+.opts button.ok{background:var(--lime);border-color:var(--lime);color:#0e0f12;font-weight:600}
+.opts button.bad{border-color:var(--red);color:var(--red)}
+.opts.done button:not(.ok):not(.bad){opacity:.45}
+.fb{margin-top:16px;padding:15px 16px;border-radius:15px;background:#111317;border:1px solid var(--line);font-size:15.5px;line-height:1.5;color:var(--soft);animation:pop .25s}
+.fb .v{font:700 16px 'Space Grotesk',sans-serif;display:block;margin-bottom:4px}
+.fb .v.y{color:var(--lime)}.fb .v.n{color:var(--red)}
+.fb .back{display:block;margin-top:8px;color:var(--mute);font-size:14px}
+.work{margin-top:8px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:15px}
+.work dt{color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding-top:3px}
+.work dd{font-family:'Space Grotesk',sans-serif;color:var(--ink)}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.hint{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center}
+.hint button{font:600 14px 'Space Grotesk',sans-serif;color:var(--mute);padding:10px 18px;border-radius:30px;border:1px solid var(--line);background:var(--card)}
+.hint button.go{color:#0e0f12;background:var(--lime);border-color:var(--lime);animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.btns{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.btn{padding:15px;border-radius:15px;font:600 16px 'Space Grotesk',sans-serif;background:var(--card2);border:1px solid var(--line);text-align:center}
+.btn.p{background:var(--lime);color:#0e0f12;border-color:var(--lime)}
+/* sheets */
+.veil{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10;opacity:0;pointer-events:none;transition:opacity .25s}
+.veil.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:600px;margin:0 auto;max-height:88vh;overflow-y:auto;background:#14161b;border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;z-index:11;padding:10px 16px calc(env(safe-area-inset-bottom) + 24px);transform:translateY(102%);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.sheet.on{transform:none}
+.grab{width:40px;height:5px;border-radius:5px;background:var(--line);margin:4px auto 14px}
+.sheet h3{font:700 22px 'Space Grotesk',sans-serif;margin:4px 4px 12px}
+.sheet h4{font:600 12px 'Space Grotesk',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin:20px 4px 8px}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 12px;border-radius:15px;background:var(--card);border:1px solid var(--line);margin-bottom:8px}
+.row.cur{border-color:var(--lime)}
+.row .c{font:700 13px 'Space Grotesk',sans-serif;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--card2);flex:none}
+.row.fin .c{background:var(--lime);color:#0e0f12}
+.row .t{flex:1;min-width:0}.row .t b{display:block;font:600 16px 'Space Grotesk',sans-serif}.row .t small{color:var(--mute);font-size:13px}
+.row .s{font:600 13px 'Space Grotesk',sans-serif;color:var(--mute)}
+.row.dark{background:#0a0b0d;border-color:var(--lime)}
+.row.dark .c{background:var(--lime);color:#0e0f12}
+details.par{margin-top:18px;border:1px solid var(--line);border-radius:15px;background:var(--card)}
+details.par summary{padding:14px;font:600 15px 'Space Grotesk',sans-serif;cursor:pointer;list-style:none}
+details.par summary:after{content:" ▸";color:var(--mute)}details.par[open] summary:after{content:" ▾"}
+.pbody{padding:0 14px 14px;font-size:14px;color:var(--soft)}
+.pbody table{width:100%;border-collapse:collapse;margin-top:4px}
+.pbody td,.pbody th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;font-size:13.5px}
+.pbody th{color:var(--mute);font-weight:500}
+.pbody td.n,.pbody th.n{text-align:right}
+.pbody ol{padding-left:18px}.pbody li{margin:6px 0;line-height:1.4}
+.pbody p{margin:10px 0;line-height:1.5}
+.reset{margin-top:12px;color:var(--red);font-size:13px;padding:8px 0}
+.gl dt{font:600 16px 'Space Grotesk',sans-serif;margin:12px 4px 2px;color:var(--ink)}
+.gl dd{font-size:14.5px;line-height:1.45;color:var(--soft);margin:0 4px}
 </style>
 </head>
 <body>
-<div class="top"><div class="in">
-  <a class="home" href="../" aria-label="Back to all science games"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3 5 8l5 5"/></svg></a>
-  <button class="deckbtn" id="deckbtn" aria-haspopup="dialog"><b id="deckname">Deck</b><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 5 4 4 4-4"/></svg></button>
-  <button class="tool" id="fbtn" aria-haspopup="dialog" aria-label="Open the word list">Aa</button>
-  <span class="count" id="count">1/1</span>
-</div><div class="bar"><i id="bar"></i></div></div>
-<main class="feed" id="feed" aria-live="polite"></main>
-<div class="hint" id="hint">Swipe up ↑</div>
+<div class="top">
+  <a class="ic" href="../" aria-label="Back to all science games" style="color:inherit;text-decoration:none">‹</a>
+  <button class="deckbtn" id="deckbtn" aria-label="Pick a deck"><span class="k" id="dk">Unit 4</span><span class="n" id="dn">Biology Swipe</span></button>
+  <button class="ic" id="wordsbtn" aria-label="Word list">Aa</button>
+  <button class="ic" id="sheetbtn" aria-label="Decks">☰</button>
+</div>
+<div class="bar"><i id="bar"></i></div>
+<div id="stage"></div>
 
-<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheettitle"><div class="p">
-  <h3 id="sheettitle">Biology · Sustainable Ecosystems</h3>
-  <p class="subline">New lessons get added here as they come in.</p>
-  <h4>Lessons</h4>
-  <div id="decks"></div>
-  <button class="linkish" id="statsbtn">Progress (for parents)</button>
-  <div id="stats" hidden></div>
-</div></div>
-
-<div class="sheet" id="fsheet" role="dialog" aria-modal="true" aria-labelledby="ftitle"><div class="p">
-  <h3 id="ftitle">Word list</h3>
-  <h4>Ecology words</h4>
-  <div class="gl">
-    <div><b>Ecology</b>The study of the relationships between living things and their environment. <em>Living together.</em></div>
-    <div><b>Biotic</b>Living. <em>Flowers, cats</em></div>
-    <div><b>Abiotic</b>Non-living. <em>Rocks, water</em></div>
-    <div><b>Individual</b>A single member of a species. <em>A horse, a bee</em></div>
-    <div><b>Species</b>Living things similar enough to produce offspring together. <em>Male &amp; female horses</em></div>
-    <div><b>Habitat</b>A natural environment with the biotic and abiotic resources a species needs to survive. <em>Log, swamp, ocean, Arctic</em></div>
-    <div><b>Population</b>How many of a species live in an area. Always a number. <em>4 sharks</em></div>
-    <div><b>Community</b>All the living things in an area. <em>Coral reef: sharks, stingrays, fish, crabs</em></div>
-    <div><b>Ecosystem</b>The system of interactions between living things and their environment. <em>Pond, forest, desert, wetland</em></div>
-    <div><b>Biodiversity</b>A wide variety of living things. <em>Rainforest, coral reef</em></div>
-    <div><b>Biome</b>A large region of similar ecosystems because of a distinct climate. <em>Arctic tundra, savannah, boreal forest</em></div>
-  </div>
-  <h4>The four spheres</h4>
-  <div class="rules">
-    <div><b>Atmosphere</b>Air: layers of gas<br>Nitrogen 78%<br>Oxygen 21%</div>
-    <div><b>Lithosphere</b>Rock: Earth's rocky surface<br>Mountains, ocean floor, continents</div>
-    <div><b>Hydrosphere</b>Water: ALL of it<br>Oceans, lakes, ice, groundwater, clouds</div>
-    <div><b>Biosphere</b>Life: where living things are<br>Rainforests, ocean trenches, mountaintops</div>
-  </div>
-  <button class="btn main" id="fclose">Back</button>
-</div></div>
+<div class="veil" id="veil"></div>
+<div class="sheet" id="sheet"></div>
+<div class="sheet" id="words"></div>
 
 <script>
-/* ---------- Content ----------
-   From Mr. Mimna's SNC1W Biology slides: "01-The Four Spheres" (Sustainable Ecosystems).
-   Add each new lesson as another entry in STAGES, and drop its id from COMING. */
-const STAGES = [
-{ id:"vocab", name:"Ecology Words", lesson:"1a",
-  power:{title:"Zooming Out", pts:[
-    "<b>Ecology</b> = the study of the relationships between living things and their environment. Ecology = <b>living together</b>.",
-    "<b>Biotic</b> = living (flowers, cats). <b>Abiotic</b> = non-living (rocks, water).",
-    "<b>Individual</b> = one member of a species (a horse, a bee). <b>Species</b> = living things similar enough to <b>produce offspring together</b>.",
-    "<b>Habitat</b> = a natural environment with the biotic and abiotic resources a species needs to survive (a log, a swamp, the Arctic).",
-    "<b>Population</b> = how many of a species live in an area. <b>Always a number</b> (4 sharks). <b>Community</b> = all the different living things in an area.",
-    "<b>Ecosystem</b> = the system of interactions between living things and their environment (pond, forest, desert, wetland).",
-    "<b>Biodiversity</b> = a wide variety of living things (rainforest, coral reef). <b>Biome</b> = a large region of similar ecosystems because of a <b>distinct climate</b> (arctic tundra, savannah, boreal forest)."],
-   ex:["Memory trick","<b>Population</b> is a number (4 sharks). <b>Community</b> is a list (sharks, stingrays, fish, crabs)."]},
-  qs:[
-  {id:"v1",q:"Ecology is…",a:"The study of the relationships between living things and their environment",w:["The study of rocks and minerals","The study of the weather","The study of the layers of the atmosphere"],
-   ex:"Ecology = living together: how living things interact with each other and with everything around them."},
-  {id:"v2",q:"Which of these is ABIOTIC?",a:"Water",w:["A cat","A flower","A bee"],
-   ex:"Abiotic = non-living. Water and rocks are abiotic; cats, flowers and bees are biotic (living)."},
-  {id:"v3",q:"Which of these is BIOTIC?",a:"A flower",w:["A rock","Water","A mountain"],
-   ex:"Biotic = living. A flower is alive; rocks, water and mountains are not."},
-  {id:"v4",sc:"One horse is grazing in a field.",q:"In ecology words, that one horse is…",a:"An individual",w:["A population","A community","A biome"],
-   ex:"Individual = a single member of a species."},
-  {id:"v5",q:"Two living things belong to the same SPECIES when…",a:"They are similar enough to produce offspring together",w:["They live in the same habitat","They are the same size","They eat the same food"],
-   ex:"Species = similar enough to have babies together, like male and female horses."},
-  {id:"v6",q:"Which of these is a POPULATION?",a:"4 sharks living on a coral reef",w:["Sharks, stingrays, fish and crabs on a coral reef","One shark","The coral reef and the water around it"],
-   ex:"Population is always a number of one species. A mix of different living things is a community."},
-  {id:"v7",sc:"A farm has horses, cows, grass and people.",q:"All of those living things together are a…",a:"Community",w:["Population","Species","Individual"],
-   ex:"Community = a group of different living things all living in one area. The farm is Mr. Mimna's example."},
-  {id:"v8",sc:"In a pond, fish eat insects, plants grow in the mud, and frogs lay eggs in the water.",q:"All of those living things AND the water and mud, interacting, make up…",a:"An ecosystem",w:["A population","A species","An individual"],
-   ex:"Ecosystem = the system of interactions between living things and their environment. It includes the non-living parts too."},
-  {id:"v9",q:"A rainforest has a huge variety of different living things. That's called…",a:"High biodiversity",w:["A large population","A single species","An abiotic habitat"],
-   ex:"Biodiversity = a wide variety of living things. Rainforests and coral reefs are the classic examples."},
-  {id:"v10",q:"Which of these is a BIOME?",a:"The boreal forest",w:["A pond","A log","4 sharks"],
-   ex:"A biome is a LARGE region of similar ecosystems because of its climate (boreal forest, arctic tundra, savannah). A pond is an ecosystem, a log is a habitat, and 4 sharks is a population."},
-  {id:"v11",q:"What makes a place a HABITAT for a species?",a:"It has the biotic and abiotic resources the species needs to survive",w:["It only has living things in it","It is always in the ocean","It is anywhere a scientist studies"],
-   ex:"A habitat gives a species what it needs to survive: living things (like food) and non-living things (like water and shelter)."}
-  ]},
-{ id:"spheres", name:"The Four Spheres", lesson:"1b",
-  power:{title:"Spheres Interact", pts:[
-    "<b>Atmosphere</b> = layers of gas around Earth: <b>nitrogen 78%</b>, <b>oxygen 21%</b>, plus other gases. Layers: troposphere, stratosphere, mesosphere, thermosphere.",
-    "<b>Lithosphere</b> = Earth's rocky outer surface: rocks and minerals (mountains, ocean floor, continents).",
-    "<b>Hydrosphere</b> = <b>ALL</b> the water on Earth: oceans, lakes, ice, groundwater and even <b>clouds</b>.",
-    "<b>Biosphere</b> = the parts of Earth where life exists: rainforests, ocean trenches, mountaintops.",
-    "The spheres are <b>closely connected</b>. A change in one causes changes in the others."],
-   ex:["Example: a wildfire","Burning forest (<b>bio</b>) sends smoke into the air (<b>atmo</b>). Rain then washes loose soil (<b>litho</b>) into lakes (<b>hydro</b>)."]},
-  qs:[
-  {id:"p1",q:"The atmosphere is mostly made of…",a:"Nitrogen",w:["Oxygen","Carbon dioxide","Hydrogen"],
-   ex:"Nitrogen is 78% of the atmosphere. Oxygen is only 21%. A common trap!"},
-  {id:"p2",q:"About how much of the atmosphere is oxygen?",a:"21%",w:["78%","50%","1%"],
-   ex:"Nitrogen 78%, oxygen 21%, other gases make up the last 1%."},
-  {id:"p3",q:"Which of these is a layer of the atmosphere?",a:"The stratosphere",w:["The hydrosphere","The ocean floor","The boreal forest"],
-   ex:"The layers are the troposphere, stratosphere, mesosphere and thermosphere."},
-  {id:"p4",q:"Mountains, continents and the ocean floor are part of the…",a:"Lithosphere",w:["Hydrosphere","Atmosphere","Biosphere"],
-   ex:"Litho = rock. The lithosphere is Earth's rocky outer surface, even the part under the ocean."},
-  {id:"p5",q:"Clouds belong to which sphere?",a:"Hydrosphere",w:["Atmosphere","Lithosphere","Biosphere"],
-   ex:"Clouds float in the air, but they're made of water, and the hydrosphere is ALL the water on Earth. Mr. Mimna lists clouds under the hydrosphere."},
-  {id:"p6",q:"Groundwater and ice are part of the…",a:"Hydrosphere",w:["Lithosphere","Atmosphere","Biosphere"],
-   ex:"Frozen or underground, it's still water: hydrosphere."},
-  {id:"p7",q:"The biosphere is…",a:"All the parts of Earth where life exists",w:["The layers of gas around Earth","All the water on Earth","Earth's rocky outer surface"],
-   ex:"Bio = life. The other three are the atmosphere, hydrosphere and lithosphere."},
-  {id:"p8",q:"Life is found in rainforests, deep ocean trenches and on mountaintops. Those places are all part of the…",a:"Biosphere",w:["Hydrosphere only","Atmosphere only","Lithosphere only"],
-   ex:"Anywhere life exists is part of the biosphere, from the deep ocean to the mountaintops."},
-  {id:"p9",sc:"A wildfire burns a forest in Northern Ontario.",q:"Smoke from the fire fills the air. Which sphere is that changing?",a:"Atmosphere",w:["Hydrosphere","Lithosphere","Biosphere"],
-   ex:"Smoke and gases go into the air, which is the atmosphere."},
-  {id:"p10",sc:"After the wildfire, rain washes loose soil off the burned hillside into a lake.",q:"Which two spheres are interacting?",a:"Lithosphere and hydrosphere",w:["Atmosphere and biosphere","Biosphere and lithosphere","Atmosphere and hydrosphere"],
-   ex:"Soil is part of the rocky surface (lithosphere), and the lake is water (hydrosphere)."},
-  {id:"p11",sc:"On a rocky coastline, waves crash against the shore and slowly wear the rock away.",q:"Which spheres are interacting?",a:"Hydrosphere and lithosphere",w:["Atmosphere and biosphere","Biosphere and lithosphere","Atmosphere only"],
-   ex:"Water (hydro) is wearing away rock (litho)."},
-  {id:"p12",sc:"Seagulls on the same coast breathe in oxygen from the air.",q:"Which spheres are interacting?",a:"Biosphere and atmosphere",w:["Hydrosphere and lithosphere","Lithosphere and atmosphere","Biosphere only"],
-   ex:"Living birds (bio) are taking gas from the air (atmo)."},
-  {id:"p13",q:"Why does Mr. Mimna say the four spheres are “very closely connected”?",a:"A change in one sphere causes changes in the others",w:["They are all made of the same material","They never affect each other","They are all found in the ocean"],
-   ex:"Like the wildfire: one event in the biosphere changed the air, the soil and the water too."}
-  ]}
+/* ============ CONTENT (only from Mr. Mimna's SNC1W class text, Unit 1: Sustainable Ecosystems) ============
+   Card types:  r = recap,  w = "from your notes" watch-out,  q = quick check (first option is the right one; shown shuffled) */
+const DECKS=[
+{id:'vocab',code:'1a',lesson:'1.1',title:'Ecology Words',cards:[
+ {t:'r',h:'Ecology',b:`<p>The study of the <b>relationships between living things and their environment</b>.</p><p>Example: salmon and bears depend on each other.</p>`},
+ {t:'r',h:'Biotic vs abiotic',b:`<p><b>Biotic</b> = living or <b>once living</b>: plants, animals, bacteria, a fallen log.</p><p><b>Abiotic</b> = never alive: water, rocks, sunlight, temperature.</p>`},
+ {t:'q',id:'v1',q:"Ecology is the study of…",o:["The relationships between living things and their environment","Only animals and how they behave","Rocks, soil and landforms","How to protect the environment from pollution"],why:`Ecology = relationships between living things and their environment (like salmon and bears).`},
+ {t:'q',id:'v2',q:"A fallen log on the forest floor is…",o:["Biotic: it was once living","Abiotic: it isn't alive any more","Neither","Both, depending on the season"],why:`Biotic means living <b>or once living</b>. The log was a tree.`},
+ {t:'q',id:'v3',q:"Which one is abiotic?",o:["Temperature","Moss","Soil bacteria","A beaver"],why:`Temperature was never alive. Moss, bacteria and beavers are all biotic.`},
+ {t:'r',h:'Species, habitat, biodiversity',b:`<ul><li><b>Species</b>: organisms that can reproduce together and have <b>fertile offspring</b> (all horses).</li><li><b>Habitat</b>: where a species lives and gets what it needs (a log, a swamp, the Arctic).</li><li><b>Biodiversity</b>: the variety of living things in an area. Coral reefs and rainforests are very high.</li></ul>`},
+ {t:'q',id:'v4',q:"What makes a group of organisms one species?",o:["They can reproduce together and have fertile offspring","They live in the same habitat","They eat the same food","They look the same"],why:`Species = can reproduce together and have <b>fertile</b> offspring.`},
+ {t:'q',id:'v5',q:"A habitat is…",o:["The place where a species lives and gets what it needs","All the species in an area","A large region with a similar climate","The variety of living things in an area"],why:`Habitat = where a species lives and gets what it needs. A large region with a similar climate is a biome.`},
+ {t:'r',h:'Levels of organization',b:`<div class="chain"><span>Individual</span><em>→</em><span>Population</span><em>→</em><span>Community</span><em>→</em><span>Ecosystem</span><em>→</em><span>Biome</span></div><ul><li><b>Population</b>: all of one species in an area. <b>Always a number</b> (4 sharks).</li><li><b>Community</b>: all the populations in an area.</li><li><b>Ecosystem</b>: the community <b>plus</b> its abiotic environment.</li><li><b>Biome</b>: a large region with a similar climate (boreal forest).</li></ul>`},
+ {t:'q',id:'v6',q:"Smallest to largest?",o:["Individual → population → community → ecosystem → biome","Individual → community → population → ecosystem → biome","Population → individual → community → biome → ecosystem","Individual → population → ecosystem → community → biome"],why:`Individual → population → community → ecosystem → biome.`},
+ {t:'q',id:'v7',q:"A pond has 30 frogs, 12 turtles and 200 water lilies. What is the population of frogs?",o:["30","242","3","All the frogs, turtles and lilies"],why:`A population is always a number: how many of <b>one</b> species. 30 frogs.`},
+ {t:'q',id:'v8',q:"Same pond. What makes up the community?",o:["The frogs, turtles and water lilies together","Just the frogs","The water, mud and sunlight","The frogs, turtles, lilies, water and mud"],why:`Community = all the populations (living things). Add the water and mud and it becomes the ecosystem.`},
+ {t:'q',id:'v9',q:"Difference between a community and an ecosystem?",o:["An ecosystem is the community plus its abiotic environment","A community is bigger than an ecosystem","An ecosystem only has one species","There is no difference"],why:`Ecosystem = community (living) + abiotic environment (non-living).`},
+ {t:'q',id:'v10',q:"Which is a biome found in Canada?",o:["Boreal forest","A coral reef","A rotting log","A population of moose"],why:`A biome is a large region with a similar climate, like the boreal forest.`},
+ {t:'q',id:'v11',q:"Why does a coral reef have high biodiversity?",o:["It has a huge variety of living things","It has a lot of water","It has very few predators","It is very large"],why:`Biodiversity = the variety of living things. Coral reefs and rainforests have very high variety.`}
+]},
+{id:'spheres',code:'1b',lesson:'1.1',title:'The Four Spheres',cards:[
+ {t:'r',h:'The four spheres',b:`<ul><li><b>Atmosphere</b>: gases around Earth, about <b>78% nitrogen, 21% oxygen</b>.</li><li><b>Lithosphere</b>: the rocky outer layer: mountains, continents, the ocean floor.</li><li><b>Hydrosphere</b>: all water: oceans, lakes, ice, groundwater <b>and clouds</b>.</li><li><b>Biosphere</b>: every part of Earth where life exists.</li></ul>`},
+ {t:'q',id:'s1',q:"Which two gases make up most of the atmosphere?",o:["Nitrogen 78%, oxygen 21%","Oxygen 78%, nitrogen 21%","Carbon dioxide 78%, oxygen 21%","Oxygen 50%, nitrogen 50%"],why:`About 78% nitrogen and 21% oxygen. Nitrogen is the big one.`},
+ {t:'q',id:'s2',q:"The ocean floor is part of the…",o:["Lithosphere","Hydrosphere","Atmosphere","Biosphere"],why:`The lithosphere is the rocky outer layer, including the ocean floor. The water above it is hydrosphere.`},
+ {t:'q',id:'s3',q:"Is a cloud part of the atmosphere or the hydrosphere?",o:["Hydrosphere: it's water","Atmosphere: it's in the sky","Neither","Biosphere"],why:`The hydrosphere is <b>all</b> the water on Earth, including clouds.`},
+ {t:'q',id:'s4',q:"Groundwater and ice belong to the…",o:["Hydrosphere","Lithosphere","Atmosphere","Biosphere"],why:`All water, frozen or underground, is hydrosphere.`},
+ {t:'q',id:'s5',q:"The biosphere is…",o:["Every part of Earth where life exists","The layer of gases around Earth","Only the forests and jungles","The rocky outer layer"],why:`Biosphere = everywhere life exists. That's a thin layer around Earth.`},
+ {t:'r',h:'The spheres affect each other',b:`<p>A wildfire in Northern Ontario changes all four:</p><ul><li><b>Atmosphere</b>: smoke and CO₂ added</li><li><b>Biosphere</b>: living things killed</li><li><b>Lithosphere</b>: soil left open to erosion</li><li><b>Hydrosphere</b>: ash washes into lakes</li></ul>`},
+ {t:'q',id:'s6',q:"A wildfire adds smoke and CO₂ to the…",o:["Atmosphere","Hydrosphere","Lithosphere","Biosphere"],why:`Smoke and gases go into the atmosphere.`},
+ {t:'q',id:'s7',q:"After a wildfire, bare soil washes away in the rain. That's a change to the…",o:["Lithosphere","Atmosphere","Biosphere","Hydrosphere"],why:`Soil and rock are lithosphere. The fire left the soil open to erosion.`},
+ {t:'q',id:'s8',q:"Ash from a wildfire washes into lakes. That's a change to the…",o:["Hydrosphere","Lithosphere","Atmosphere","Biosphere"],why:`Lakes are hydrosphere.`},
+ {t:'q',id:'s9',q:"A wildfire kills animals and trees. That's a change to the…",o:["Biosphere","Lithosphere","Hydrosphere","Atmosphere"],why:`Living things are the biosphere.`},
+ {t:'q',id:'s10',q:"Which shows the hydrosphere and lithosphere interacting?",o:["A river wearing away rock","Wind carrying smoke","A deer eating grass","Oxygen mixing with nitrogen"],why:`River (hydrosphere) + rock (lithosphere). The others don't involve both.`},
+ {t:'q',id:'s11',q:"A volcano erupts on an island. Ash and gas in the sky are a change to the…",o:["Atmosphere","Lithosphere","Hydrosphere","Biosphere"],why:`Gases and ash in the air = atmosphere. The new lava rock would be lithosphere.`},
+ {t:'q',id:'s12',q:"A single tree touches which spheres?",o:["All four","Only the biosphere","Biosphere and lithosphere only","Biosphere and atmosphere only"],why:`It's alive (biosphere), roots in soil (lithosphere), takes in water (hydrosphere), and exchanges gases with the air (atmosphere).`}
+]},
+{id:'energy',code:'1.2',lesson:'1.2',title:'Energy in Ecosystems',cards:[
+ {t:'r',h:'It starts with the Sun',b:`<p>Almost all energy in an ecosystem comes from the <b>Sun</b>.</p><p>Producers capture it by <b>photosynthesis</b> and store it in glucose:</p><p><b>carbon dioxide + water + light energy → glucose + oxygen</b></p><p>The energy is passed on every time one organism eats another.</p>`},
+ {t:'q',id:'e1',q:"Where does almost all the energy in an ecosystem come from?",o:["The Sun","The soil","Water","Decomposers"],why:`Almost all of it comes from the Sun, captured by producers.`},
+ {t:'q',id:'e2',q:"Which is the word equation for photosynthesis?",o:["carbon dioxide + water + light energy → glucose + oxygen","glucose + oxygen → carbon dioxide + water + energy","oxygen + water + light energy → glucose + carbon dioxide","glucose + water → oxygen + light energy"],why:`CO₂ + water + light energy → glucose + oxygen. (The reverse is cellular respiration, lesson 1.4.)`},
+ {t:'r',h:'Energy roles',b:`<ul><li><b>Producer</b>: makes its own food. Always the 1st trophic level (grass, trees, algae).</li><li><b>Consumer</b>: eats others. Primary eats producers, secondary eats primary, tertiary eats secondary.</li><li><b>Herbivore</b> plants only (deer) · <b>carnivore</b> animals only (wolf) · <b>omnivore</b> both (bear, human)</li><li><b>Scavenger</b>: eats animals already dead (vulture)</li><li><b>Decomposer</b>: breaks down dead things and waste, <b>returns nutrients to the soil</b> (bacteria, fungi, mushrooms)</li></ul>`},
+ {t:'q',id:'e3',q:"Why are producers always the first trophic level?",o:["They make their own food from the Sun's energy","They are the biggest organisms","They eat decomposers","They have no predators"],why:`Producers make their own food, so every other level depends on them.`},
+ {t:'q',id:'e4',q:"A black bear eats berries and fish. It's a…",o:["Omnivore","Herbivore","Carnivore","Scavenger"],why:`Eats both plants and animals = omnivore.`},
+ {t:'q',id:'e5',q:"A vulture is a…",o:["Scavenger","Decomposer","Producer","Herbivore"],why:`Scavengers eat animals that are already dead.`},
+ {t:'q',id:'e6',q:"A mushroom is a…",o:["Decomposer","Producer","Scavenger","Herbivore"],why:`Mushrooms (fungi) break down dead things and return nutrients to the soil.`},
+ {t:'q',id:'e7',q:"Difference between a scavenger and a decomposer?",o:["A scavenger eats dead animals; a decomposer breaks down dead things and waste and returns nutrients to the soil","They are the same thing","A decomposer hunts live prey; a scavenger doesn't","A scavenger is a plant; a decomposer is an animal"],why:`Scavenger = eats dead animals (vulture). Decomposer = breaks down dead stuff into nutrients for the soil (bacteria, fungi).`},
+ {t:'r',h:'Top of the chain',b:`<p><b>Apex predator</b>: at the top of the food chain with <b>no natural predators</b> (wolf, orca).</p><p><b>Keystone species</b>: has a much bigger effect than its numbers suggest. Remove it and the whole ecosystem changes (wolves in Yellowstone, sea otters in kelp forests).</p>`},
+ {t:'q',id:'e8',q:"Sea otters are few, but removing them changes the whole kelp forest. They are a…",o:["Keystone species","Producer","Scavenger","Pioneer species"],why:`Keystone species: a much bigger effect than their numbers suggest.`},
+ {t:'q',id:'e9',q:"An apex predator is…",o:["A predator at the top of the chain with no natural predators","Any animal that eats plants","The most common animal in an ecosystem","A predator that only eats dead animals"],why:`Apex = top. No natural predators. Examples: wolf, orca.`},
+ {t:'r',h:'Chains and webs',b:`<div class="chain"><span>Grass</span><em>→</em><span>Grasshopper</span><em>→</em><span>Frog</span><em>→</em><span>Snake</span></div><p>Arrows point <b>from the one being eaten to the one eating it</b>. That's the direction energy flows.</p><p>A <b>food web</b> is many connected chains. It's more realistic because most organisms eat and are eaten by more than one thing.</p>`},
+ {t:'q',id:'e10',q:"In a food chain, which way do the arrows point?",o:["From the organism being eaten to the one eating it","From the eater to the one being eaten","From the top predator down to the producer","They can point either way"],why:`Arrow = direction energy flows: grass → grasshopper means the grasshopper eats the grass.`},
+ {t:'q',id:'e11',q:"Why is a food web more realistic than a food chain?",o:["Most organisms eat and are eaten by more than one thing","Food webs only include producers","Food chains are too long","Food webs don't use arrows"],why:`Real animals have more than one food and more than one predator.`},
+ {t:'r',h:'The 10% rule',b:`<p>Only about <b>10%</b> of the energy at one level passes to the next.</p><div class="chain"><span>Grass 1000 J</span><em>→</em><span>Rabbit 100 J</span><em>→</em><span>Snake 10 J</span><em>→</em><span>Hawk 1 J</span></div><p>The other <b>90%</b> is used to live (moving, growing, staying warm) or lost as heat and waste.</p><p>Going <b>up</b> a level: × 0.1. Going <b>back down</b>: × 10.</p>`},
+ {t:'q',id:'e12',calc:1,q:"Grass holds 10 000 J. Using the 10% rule, how much reaches a rabbit that eats it?",o:["1000 J","100 J","9000 J","10 000 J"],why:`<dl class="work"><dt>Rule</dt><dd>next level = 10% of this level</dd><dt>Sub</dt><dd>10 000 J × 0.10</dd><dt>Answer</dt><dd>1000 J</dd></dl>`},
+ {t:'q',id:'e13',calc:1,q:"Same field: a fox eats the rabbit. How much energy reaches the fox?",o:["100 J","1000 J","10 J","900 J"],why:`<dl class="work"><dt>Rule</dt><dd>10% of the rabbit's energy</dd><dt>Sub</dt><dd>1000 J × 0.10</dd><dt>Answer</dt><dd>100 J</dd></dl>`},
+ {t:'q',id:'e14',q:"Where does the other 90% of the energy go at each level?",o:["Used to live (moving, growing, staying warm) or lost as heat and waste","It is stored in the soil for later","It goes back to the Sun","It is passed to decomposers only"],why:`Each organism uses most of its energy just living, and loses some as heat and waste.`},
+ {t:'q',id:'e15',calc:1,q:"Plants → mice → snakes → owls. The owls get 25 J. How much energy was in the plants?",o:["25 000 J","2500 J","250 J","250 000 J"],why:`Going back down a level = × 10, three times.<dl class="work"><dt>Rule</dt><dd>each level below has 10× more</dd><dt>Sub</dt><dd>25 J × 10 × 10 × 10</dd><dt>Steps</dt><dd>snakes 250 J → mice 2500 J → plants 25 000 J</dd><dt>Answer</dt><dd>25 000 J</dd></dl>`},
+ {t:'q',id:'e16',q:"Why do food chains rarely have more than 4 or 5 levels?",o:["So little energy is left at the top that it can't support another level","Animals can't eat more than four things","Decomposers stop the chain","Top predators eat each other"],why:`With only 10% passed on each time, after 4–5 levels there's almost nothing left.`},
+ {t:'q',id:'e17',q:"Why are wolves always less common than deer?",o:["Only about 10% of the deer's energy reaches the wolves, so less energy supports fewer wolves","Wolves have fewer babies because they're bigger","Deer eat the wolves' food","Wolves are an invasive species"],why:`Less energy at each level up = fewer animals that level can support.`},
+ {t:'q',id:'e18',q:"Why can the same farmland feed more people if they eat plants instead of beef?",o:["Eating plants skips a level, so about 10× more of the energy reaches people","Plants grow faster than cows","Beef has no energy in it","Cows don't need to eat"],why:`It takes about 10 times the plant energy (and land, water, feed) to make the same energy as meat.`}
+]},
+{id:'nitrogen',code:'1.3',lesson:'1.3',title:'The Nitrogen Cycle',cards:[
+ {t:'r',h:'Energy flows. Matter cycles.',b:`<p>Energy passes through an ecosystem one way. Matter (like nitrogen and carbon) gets <b>reused in a cycle</b>.</p><p>A <b>biogeochemical cycle</b> is the movement of matter through living and non-living parts of the environment.</p>`},
+ {t:'q',id:'n1',q:"How is the way matter moves different from the way energy moves?",o:["Energy flows through; matter cycles and gets reused","Matter flows through; energy cycles","They both cycle","They both flow one way and are lost"],why:`Energy flows (and is lost as heat). Matter cycles.`},
+ {t:'q',id:'n2',q:"A biogeochemical cycle is…",o:["The movement of matter through living and non-living parts of the environment","The flow of energy from the Sun to animals","A food web drawn as a circle","The life cycle of a plant"],why:`Bio (living) + geo (Earth) + chemical: matter moving through living and non-living parts.`},
+ {t:'r',h:'Why nitrogen matters',b:`<p>Living things need nitrogen to make <b>DNA and proteins</b>.</p><p>Air is <b>78% nitrogen gas (N₂)</b>, but plants and animals <b>can't use it in that form</b>. It has to be changed first.</p><p>Forms to know: N₂ (gas), ammonium NH₄⁺, nitrite NO₂⁻, nitrate NO₃⁻.</p>`},
+ {t:'q',id:'n3',q:"What do living things use nitrogen for?",o:["Making DNA and proteins","Breathing","Making glucose","Storing energy as fat"],why:`Nitrogen goes into DNA and proteins.`},
+ {t:'q',id:'n4',q:"Air is 78% nitrogen. Why can't plants just use it?",o:["It's N₂ gas, a form they can't use; it has to be fixed into another form first","There isn't enough of it","Plants only absorb oxygen","It is poisonous to plants"],why:`Plants and animals can't use N₂ gas. Your notes said it's held together very strongly and has to be fixed. Right idea.`},
+ {t:'q',id:'n5',q:"Which four elements make up about 95% of most living things?",o:["Carbon, hydrogen, oxygen, nitrogen","Carbon, hydrogen, oxygen, iron","Oxygen, carbon, hydrogen, calcium","Carbon, oxygen, nitrogen, sodium"],why:`C, H, O and <b>N</b>. Your notes had oxygen, carbon, hydrogen but missed nitrogen, the star of this lesson.`},
+ {t:'r',h:'The steps',b:`<ul><li><b>Fixation</b>: bacteria (in soil and in root nodules of beans and peas) or <b>lightning</b> change N₂ into ammonium. Atmosphere → lithosphere.</li><li><b>Nitrification</b>: bacteria change ammonium → nitrites → <b>nitrates</b>.</li><li><b>Assimilation</b>: plants absorb nitrates through their roots. Lithosphere → biosphere.</li><li><b>Consumption and decomposition</b>: animals eat plants; decomposers return nitrogen to the soil.</li><li><b>Denitrification</b>: bacteria change nitrates back into N₂ gas. Lithosphere → atmosphere.</li><li><b>Runoff</b>: nitrates wash into lakes and rivers. Lithosphere → hydrosphere.</li></ul>`},
+ {t:'q',id:'n6',q:"What does nitrogen fixation do, and what can do it?",o:["Changes N₂ gas into ammonium; done by bacteria or lightning","Changes nitrates into N₂ gas; done by plants","Changes ammonium into nitrates; done by animals","Moves nitrates into lakes; done by rain"],why:`Fixation: N₂ → ammonium. Two fixers: bacteria (soil and root nodules) and lightning.`},
+ {t:'q',id:'n7',q:"During nitrification, bacteria change…",o:["Ammonium into nitrites, then nitrates","Nitrates back into N₂ gas","N₂ gas into ammonium","Nitrates into proteins"],why:`Nitrification: ammonium → nitrites → nitrates (the form plants absorb).`},
+ {t:'q',id:'n8',q:"Plants absorbing nitrates through their roots is called…",o:["Assimilation","Denitrification","Fixation","Runoff"],why:`Assimilation: lithosphere → biosphere.`},
+ {t:'w',h:'Breathing doesn\'t count',b:`<p>You wrote that animals get nitrogen by eating plants <b>and breathing air</b>.</p><p>Eating plants: yes. Breathing: <b>no</b>. Animals breathe in N₂ all day but can't use it, same as plants. They only get usable nitrogen from <b>food</b>.</p>`},
+ {t:'q',id:'n9',q:"How do animals get the nitrogen they need?",o:["By eating plants (or animals that ate plants)","By breathing in nitrogen gas","By absorbing nitrates through their skin","From lightning"],why:`Only through food. The N₂ they breathe in goes right back out unused.`},
+ {t:'q',id:'n10',q:"What do decomposers do in the nitrogen cycle?",o:["Return nitrogen from dead things and waste to the soil","Fix nitrogen from the air","Turn nitrates into N₂ gas","Carry nitrates into lakes"],why:`Decomposers break down dead things and waste, putting nitrogen back in the soil.`},
+ {t:'q',id:'n11',q:"Denitrification is when bacteria…",o:["Change nitrates back into N₂ gas, returning it to the atmosphere","Change N₂ gas into ammonium","Help plants absorb nitrates","Break down dead animals"],why:`Denitrification: nitrates → N₂ gas, lithosphere → atmosphere. That closes the cycle. Your notes had this one right.`},
+ {t:'q',id:'n12',q:"Which is the formula for nitrate?",o:["NO₃⁻","NH₄⁺","N₂","NO₂⁻"],why:`Nitrate NO₃⁻ · nitrite NO₂⁻ · ammonium NH₄⁺ · nitrogen gas N₂.`},
+ {t:'q',id:'n13',q:"Why do farmers plant beans or peas every few years?",o:["Bacteria in their root nodules fix nitrogen, adding it to the soil","Beans use up extra nitrogen","Beans keep insects away","Beans need no water"],why:`Beans and peas have nitrogen-fixing bacteria in root nodules, so they add usable nitrogen back to the soil.`},
+ {t:'r',h:'Eutrophication',b:`<div class="chain"><span>Fertilizer runoff</span><em>→</em><span>Algae bloom</span><em>→</em><span>Algae die</span><em>→</em><span>Decomposers use up O₂</span><em>→</em><span>Dead zone</span></div><p>Fertilizer and livestock waste run into lakes and rivers. The extra nutrients feed an algae bloom. Fish can't survive in the dead zone.</p><p>Ontario example: <b>Lake Erie</b>.</p>`},
+ {t:'q',id:'n14',q:"Put the dead-zone steps in order.",o:["Fertilizer runs off → algae bloom → algae die → decomposers use up oxygen → fish can't survive","Algae bloom → fertilizer runs off → fish die → decomposers use up oxygen","Fertilizer runs off → fish die → algae bloom → oxygen runs out","Decomposers use up oxygen → fertilizer runs off → algae bloom → algae die"],why:`Nutrients → bloom → algae die → decomposers eat them and use up the oxygen → dead zone.`},
+ {t:'q',id:'n15',q:"In a dead zone, what actually kills the fish?",o:["Decomposers breaking down dead algae use up the oxygen","The fertilizer poisons them","The algae eat them","The water gets too warm"],why:`It's the lack of oxygen, used up by decomposers.`},
+ {t:'q',id:'n16',q:"Where in Ontario have algae blooms been a problem?",o:["Lake Erie","Hudson Bay","Algonquin Park","The Niagara Escarpment"],why:`Lake Erie is the class text's example.`}
+]},
+{id:'carbon',code:'1.4',lesson:'1.4',title:'Carbon Cycle & Climate',cards:[
+ {t:'r',h:'Two mirror reactions',b:`<p><b>Photosynthesis</b> (plants and algae):<br>carbon dioxide + water + light energy → glucose + oxygen<br>Stores energy · <b>removes</b> CO₂ from the air.</p><p><b>Cellular respiration</b> (<b>all</b> living things):<br>glucose + oxygen → carbon dioxide + water + energy<br>Releases energy · <b>adds</b> CO₂ to the air.</p><p>The products of one are the reactants of the other, so they balance each other.</p>`},
+ {t:'q',id:'c1',q:"Which is the word equation for cellular respiration?",o:["glucose + oxygen → carbon dioxide + water + energy","carbon dioxide + water + light energy → glucose + oxygen","glucose + carbon dioxide → oxygen + water","oxygen + water → glucose + energy"],why:`Respiration is photosynthesis backwards: glucose + oxygen → CO₂ + water + energy.`},
+ {t:'q',id:'c2',q:"Who does cellular respiration?",o:["All living things, including plants","Only animals","Only plants and algae","Only decomposers"],why:`All living things. Plants do photosynthesis <b>and</b> respiration.`},
+ {t:'q',id:'c3',q:"How do photosynthesis and respiration balance each other?",o:["The products of one are the reactants of the other","They both remove CO₂","They both release energy","They happen in different seasons"],why:`Photosynthesis makes glucose + O₂, which respiration uses up, making the CO₂ + water photosynthesis needs.`},
+ {t:'q',id:'c4',q:"Which one removes CO₂ from the atmosphere?",o:["Photosynthesis","Cellular respiration","Combustion","Decomposition"],why:`Photosynthesis takes in CO₂. Respiration, combustion and decomposition release it.`},
+ {t:'r',h:'Carbon sinks',b:`<p>A <b>carbon sink</b> stores carbon.</p><ul><li><b>Short-term</b>: living things, the atmosphere, the ocean</li><li><b>Long-term</b>: fossil fuels, soil, sedimentary rock</li></ul>`},
+ {t:'w',h:'Diamonds aren\'t a carbon sink',b:`<p>For short- and long-term carbon stores you wrote <b>diamond and graphite</b>.</p><p>Those are forms of carbon, not the stores Mr. Mimna is asking about. Learn his six: <b>living things, atmosphere, ocean</b> (short) and <b>fossil fuels, soil, sedimentary rock</b> (long).</p>`},
+ {t:'q',id:'c5',q:"Which is a short-term carbon sink?",o:["The ocean","Sedimentary rock","Fossil fuels","Diamond"],why:`Short-term: living things, the atmosphere, the ocean.`},
+ {t:'q',id:'c6',q:"Which is a long-term carbon sink?",o:["Fossil fuels","The atmosphere","A maple tree","A deer"],why:`Long-term: fossil fuels, soil, sedimentary rock.`},
+ {t:'q',id:'c7',q:"Which list is all long-term stores?",o:["Fossil fuels, soil, sedimentary rock","Living things, atmosphere, ocean","Diamond, graphite, coal","Ocean, soil, trees"],why:`Fossil fuels, soil, sedimentary rock.`},
+ {t:'r',h:'How carbon moves',b:`<ul><li><b>Photosynthesis</b>: air → plants</li><li><b>Consumption</b>: plants → animals</li><li><b>Respiration</b>: living things → air</li><li><b>Decomposition</b>: dead things → soil</li><li><b>Fossilization</b>: slowly locks carbon into fossil fuels and rock over <b>millions of years</b></li><li><b>Extraction + combustion</b>: humans dig up and burn fossil fuels → CO₂</li></ul>`},
+ {t:'q',id:'c8',q:"A carbon atom goes air → maple tree → deer → air. Which processes?",o:["Photosynthesis → consumption → respiration","Respiration → consumption → photosynthesis","Combustion → decomposition → photosynthesis","Photosynthesis → decomposition → combustion"],why:`Tree takes it in (photosynthesis), deer eats the tree (consumption), deer breathes it out (respiration).`},
+ {t:'q',id:'c9',q:"Decomposition moves carbon into…",o:["The soil","The atmosphere only","Fossil fuels right away","Plants"],why:`Decomposition moves carbon into the soil.`},
+ {t:'w',h:'Not the Earth\'s core',b:`<p>You wrote that fossil fuels form when decomposed plants are <b>heated under the Earth's core</b>.</p><p>Not the core. Dead things get buried, and <b>fossilization</b> slowly locks their carbon into fossil fuels and rock over <b>millions of years</b>.</p>`},
+ {t:'q',id:'c10',q:"How do fossil fuels form?",o:["Fossilization slowly locks carbon from dead things into fuel and rock over millions of years","Plants are melted by the Earth's core","Volcanoes make them in a few years","Bacteria make them from nitrogen"],why:`Fossilization takes millions of years.`},
+ {t:'q',id:'c11',q:"Why does burning fossil fuels raise CO₂ so quickly?",o:["It releases carbon stored over millions of years in just a few decades","Fossil fuels are mostly oxygen","Burning makes new carbon","It stops photosynthesis"],why:`Millions of years of stored carbon released in decades.`},
+ {t:'q',id:'c12',q:"How does cutting down forests affect the carbon cycle?",o:["It removes carbon sinks, and burning or rotting the wood releases its carbon as CO₂","It adds oxygen to the atmosphere","It has no effect","It moves carbon into fossil fuels"],why:`Two hits: fewer trees taking in CO₂, and the wood's carbon goes back into the air.`},
+ {t:'r',h:'Climate change',b:`<p>More CO₂ <b>traps more heat</b>.</p><p><b>Climate change</b> = a <b>long-term shift</b> in Earth's temperature and weather. (Weather is what's happening today; climate is the long-term pattern.)</p><p><b>Mitigation</b> = reducing it: renewable energy, protecting forests, planting trees, wasting less food.</p>`},
+ {t:'q',id:'c13',q:"What is climate change?",o:["A long-term shift in Earth's temperature and weather","Today's weather being hotter than yesterday","How fast the seasons change","A single very hot summer"],why:`Long-term shift. One hot day or summer is weather.`},
+ {t:'q',id:'c14',q:"Which is an example of mitigation?",o:["Using renewable energy","Burning more coal","Cutting down forests","Draining wetlands"],why:`Mitigation = reducing climate change: renewables, protecting forests, planting trees, wasting less food.`},
+ {t:'q',id:'c15',q:"Why does more CO₂ in the atmosphere cause climate change?",o:["CO₂ traps more heat","CO₂ blocks sunlight","CO₂ makes more clouds","CO₂ uses up oxygen"],why:`More CO₂ traps more heat.`}
+]},
+{id:'succession',code:'1.5',lesson:'1.5',title:'Ecological Succession',cards:[
+ {t:'r',h:'Succession',b:`<p><b>Ecological succession</b> = the gradual change in a community after a <b>disturbance</b> (fire, flood, volcano, human activity).</p><div class="chain"><span>Pioneers</span><em>→</em><span>Grasses</span><em>→</em><span>Shrubs</span><em>→</em><span>Trees</span><em>→</em><span>Climax community</span></div><p><b>Pioneer species</b> (lichens, mosses) move in first and start building soil. A <b>climax community</b> is the stable end point, like Ontario's mixed forests.</p>`},
+ {t:'q',id:'u1',q:"Ecological succession is…",o:["The gradual change in a community after a disturbance","The sudden death of a community","Animals moving to a new habitat","The order animals eat each other in"],why:`Gradual change after a disturbance.`},
+ {t:'q',id:'u2',q:"Which are pioneer species?",o:["Lichens and mosses","Maple and oak trees","Deer and rabbits","Wolves and bears"],why:`Lichens and mosses come first and start building soil.`},
+ {t:'q',id:'u3',q:"A climax community is…",o:["The stable community that forms at the end of succession","The first species to arrive","A community that has just burned","The biggest animal in the area"],why:`Stable end point, like Ontario's mixed forests.`},
+ {t:'r',h:'Primary vs secondary',b:`<p><b>Primary</b>: starts on <b>bare rock, no soil</b>. After volcanoes, glaciers, new islands. Pioneers: lichens and mosses. <b>Very slow</b> (hundreds to thousands of years).</p><p><b>Secondary</b>: starts on <b>existing soil</b>. After fires, floods, farming, mining. Pioneers: grasses and weeds. <b>Faster</b> (decades).</p>`},
+ {t:'q',id:'u4',q:"Main difference between primary and secondary succession?",o:["Primary starts on bare rock with no soil; secondary starts where soil already exists","Primary is caused by humans; secondary is natural","Primary is faster","Secondary has no pioneer species"],why:`It's all about the soil. No soil = primary.`},
+ {t:'q',id:'u5',q:"A new volcanic island forms. Which succession?",o:["Primary","Secondary"],why:`Bare new rock, no soil.`},
+ {t:'q',id:'u6',q:"A farm field is left alone. Which succession?",o:["Secondary","Primary"],why:`The soil is already there.`},
+ {t:'q',id:'u7',q:"A glacier melts and leaves bare land. Which succession?",o:["Primary","Secondary"],why:`Glaciers scrape down to bare rock. No soil.`},
+ {t:'q',id:'u8',q:"A forest grows back after a fire. Which succession?",o:["Secondary","Primary"],why:`The fire burned the plants, but the soil stayed.`},
+ {t:'q',id:'u9',q:"Why is secondary succession faster?",o:["The soil is already there, so plants don't have to wait for it to be built","There are more animals","It only happens in warm places","Pioneer species grow faster on rock"],why:`Building soil from bare rock is the slow part. Secondary skips it.`},
+ {t:'q',id:'u10',q:"Order for primary succession?",o:["Bare rock → lichens → grasses → shrubs → small trees → mature forest","Lichens → bare rock → shrubs → grasses → mature forest → small trees","Bare rock → grasses → lichens → small trees → shrubs → mature forest","Bare rock → shrubs → lichens → grasses → small trees → mature forest"],why:`Rock, pioneers, then bigger and bigger plants.`},
+ {t:'q',id:'u11',q:"What are the pioneer species in secondary succession?",o:["Grasses and weeds","Lichens and mosses","Mature trees","Shrubs"],why:`Secondary has soil already, so grasses and weeds come first.`},
+ {t:'r',h:'Fire is part of it',b:`<p><b>Prescribed burns</b>: small, controlled fires that clear dead wood so wildfires are smaller.</p><p>Some trees, like <b>jack pine</b>, need fire to open their cones.</p>`},
+ {t:'q',id:'u12',q:"Why are prescribed burns used?",o:["They clear dead wood so wildfires are smaller","They kill invasive species","They add nitrogen to the air","They start primary succession"],why:`Less dead wood = less fuel for a big wildfire.`},
+ {t:'q',id:'u13',q:"Why does jack pine depend on fire?",o:["It needs fire to open its cones","It can't grow in shade","Fire kills its predators","It only grows on bare rock"],why:`Jack pine cones open with fire.`},
+ {t:'q',id:'u14',q:"Which is a human-caused disturbance that can start succession?",o:["Mining","A volcano","A glacier","Lightning"],why:`Human: farming, mining. Natural: fires, floods, volcanoes, glaciers.`}
+]},
+{id:'hippo',code:'1.6',lesson:'1.6',title:'Human Impacts',cards:[
+ {t:'r',h:'Why biodiversity matters',b:`<p>High biodiversity = more food resources, more habitats and more <b>resilience</b>.</p><p>If one species struggles, others can fill its role, so the ecosystem recovers from disturbances more easily.</p>`},
+ {t:'q',id:'h1',q:"Why is an ecosystem with high biodiversity more stable?",o:["If one species struggles, others can fill its role","It has fewer predators","It has no invasive species","It never has disturbances"],why:`Other species can fill the gap, so it recovers more easily.`},
+ {t:'r',h:'HIPPO-C',b:`<ul><li><b>H</b>abitat loss: land cleared for farms, roads, housing (Southern Ontario wetlands drained)</li><li><b>I</b>nvasive species: non-native, no predators, spread fast (zebra mussels, emerald ash borer)</li><li><b>P</b>ollution: harmful substances in air, water, land (fertilizer runoff, plastics)</li><li><b>P</b>opulation: more people need more land, food, water, energy (urban sprawl)</li><li><b>O</b>verexploitation: harvesting faster than a species can reproduce (Atlantic cod collapse)</li><li><b>C</b>limate change: species must move or die out (polar bears losing sea ice)</li></ul>`},
+ {t:'q',id:'h2',q:"What does HIPPO-C stand for?",o:["Habitat loss, Invasive species, Pollution, Population, Overexploitation, Climate change","Habitat, Insects, Plants, Predators, Oxygen, Carbon","Hunting, Invasive species, Pollution, Poaching, Oil, Climate change","Habitat loss, Industry, Pollution, Population, Oceans, Carbon"],why:`H-I-P-P-O-C: Habitat loss, Invasive species, Pollution, Population, Overexploitation, Climate change.`},
+ {t:'q',id:'h3',q:"Draining Southern Ontario's wetlands is an example of…",o:["Habitat loss","Overexploitation","Invasive species","Climate change"],why:`Land cleared or drained for farms, roads, housing = habitat loss.`},
+ {t:'q',id:'h4',q:"Why are invasive species often so successful in a new ecosystem?",o:["They're non-native and have no predators there, so they spread fast","They are always bigger than native species","Humans feed them","They only eat plants"],why:`No natural predators to keep them in check. Your notes said they outcompete native organisms. Good.`},
+ {t:'q',id:'h5',q:"Which is an invasive species in Ontario?",o:["Emerald ash borer","Sugar maple","White-tailed deer","Trillium"],why:`Emerald ash borer and zebra mussels are the class text's examples. You named the ash borer in your notes.`},
+ {t:'q',id:'h6',q:"What caused the Atlantic cod collapse?",o:["Overexploitation: fishing them faster than they could reproduce","An invasive species","Fertilizer runoff","Habitat loss on land"],why:`Overharvesting = taking them faster than they can reproduce.`},
+ {t:'q',id:'h7',q:"Fertilizer runoff and plastics are examples of…",o:["Pollution","Habitat loss","Overexploitation","Population"],why:`Harmful substances in air, water or land = pollution.`},
+ {t:'q',id:'h8',q:"Why does a growing human population increase all the other HIPPO-C threats?",o:["More people need more land, food, water and energy","People cause climate change only","More people means fewer invasive species","It doesn't affect them"],why:`More people → more land cleared, more pollution, more harvesting, more emissions.`},
+ {t:'q',id:'h9',q:"Polar bears losing sea ice is an example of…",o:["Climate change","Pollution","Invasive species","Overexploitation"],why:`Changing temperatures force species to move or die out.`},
+ {t:'r',h:'Squid dissection',b:`<ul><li><b>Mantle</b> with <b>chromatophores</b> for camouflage</li><li><b>8 arms</b> and <b>2 longer tentacles</b> for catching prey</li><li><b>Fins</b> for steering, <b>jet propulsion</b> for speed</li><li>A hard <b>beak</b></li><li><b>Three hearts</b>: two for the gills, one for the body</li><li>Feathery <b>gills</b>, an <b>ink sac</b>, and a <b>pen</b> that supports the body</li></ul>`},
+ {t:'q',id:'h10',q:"Squid arms vs tentacles?",o:["8 arms and 2 longer tentacles for catching prey","2 arms and 8 tentacles","10 arms, no tentacles","8 tentacles and 2 short arms"],why:`8 arms + 2 longer tentacles.`},
+ {t:'q',id:'h11',q:"How many hearts does a squid have, and what do they do?",o:["Three: two for the gills, one for the body","One for the whole body","Two: one for the gills, one for the body","Four: one for each pair of arms"],why:`Two pump blood through the gills, one pumps it to the body.`},
+ {t:'q',id:'h12',q:"What are chromatophores for?",o:["Camouflage","Steering","Breathing","Supporting the body"],why:`Chromatophores in the mantle change colour for camouflage.`},
+ {t:'q',id:'h13',q:"What does a squid use for speed, and what for steering?",o:["Jet propulsion for speed, fins for steering","Fins for speed, tentacles for steering","Arms for speed, the pen for steering","Ink for speed, the beak for steering"],why:`Jet propulsion = speed. Fins = steering.`},
+ {t:'q',id:'h14',q:"What supports a squid's body?",o:["The pen","The beak","The ink sac","The mantle's chromatophores"],why:`The pen is a stiff support inside the body.`}
+]},
+{id:'sustain',code:'1.7',lesson:'1.7',title:'Sustainable Ecosystems',cards:[
+ {t:'r',h:'Carrying capacity',b:`<p>A population can't grow forever.</p><p><b>Carrying capacity</b> = the largest population of a species an environment can support over time. On a graph the population rises, then <b>levels off</b> around it.</p><p><b>Limiting factors</b> restrict population size: food, water, space, predators, disease, weather. More food raises carrying capacity; more predators or disease lowers it.</p>`},
+ {t:'q',id:'p1',q:"Carrying capacity is…",o:["The largest population of a species an environment can support over time","The number of babies an animal can have","How much food one animal can carry","The total number of species in an ecosystem"],why:`Largest population the environment can support over time.`},
+ {t:'q',id:'p2',q:"On a graph, what does a population do as it reaches carrying capacity?",o:["Rises, then levels off","Keeps rising forever","Drops to zero","Stays flat the whole time"],why:`Rises, then levels off around the carrying capacity line.`},
+ {t:'q',id:'p3',q:"Which is NOT a limiting factor?",o:["Carrying capacity","Food","Disease","Predators"],why:`Limiting factors (food, water, space, predators, disease, weather) are what <b>set</b> the carrying capacity.`},
+ {t:'q',id:'p4',q:"More wolves move into an area. What happens to the deer's carrying capacity?",o:["It goes down","It goes up","It stays the same","It doubles"],why:`More predators lowers carrying capacity. More food would raise it.`},
+ {t:'q',id:'p5',q:"A harsh winter is a limiting factor because…",o:["Weather can kill animals and cut their food, limiting population size","It raises carrying capacity","Animals reproduce faster in winter","It removes predators"],why:`Weather is one of the limiting factors in the class text.`},
+ {t:'r',h:'Trophic cascade',b:`<p>Adding or removing a top predator affects the <b>whole food web</b>.</p><div class="chain"><span>Wolves return (1995)</span><em>→</em><span>Less elk grazing</span><em>→</em><span>Willows & aspens regrow</span><em>→</em><span>Beavers return</span><em>→</em><span>Riverbanks stop eroding</span></div>`},
+ {t:'q',id:'p6',q:"A trophic cascade is…",o:["When adding or removing a top predator affects the whole food web","A waterfall in an ecosystem","The 10% energy loss between levels","When decomposers break down a food web"],why:`Change at the top ripples all the way down.`},
+ {t:'q',id:'p7',q:"How did bringing wolves back to Yellowstone change the rivers?",o:["Less elk grazing let willows and aspens regrow, beavers returned and riverbanks stopped eroding","Wolves drank less water so rivers got bigger","Wolves dug new river channels","It had no effect on rivers"],why:`Wolves → less grazing → trees regrow → beavers → stable riverbanks.`},
+ {t:'q',id:'p8',q:"Predict: the wolves are removed from Yellowstone again.",o:["Elk grazing rises, willows and aspens shrink, and riverbanks erode again","Nothing changes","The rivers dry up instantly","Beavers become the top predator"],why:`The cascade runs backwards.`},
+ {t:'r',h:'Sustainable farming',b:`<p>A <b>sustainable ecosystem</b> can withstand pressure and keep supporting a variety of organisms.</p><p><b>Sustainable agriculture</b> = farming that future generations can keep using. Judge it on four qualities:</p><ul><li><b>Efficiency</b>: faster or less effort → drip irrigation</li><li><b>Self-sufficiency</b>: takes care of itself → composting farm waste</li><li><b>Diversity</b>: variety of living things → crop rotation, mixed crops</li><li><b>Resilience</b>: recovers quickly → cover crops protect soil</li></ul>`},
+ {t:'q',id:'p9',q:"What makes an ecosystem sustainable?",o:["It can withstand pressure and keep supporting a variety of organisms","It has only one species","It never changes","It produces lots of food for people"],why:`Withstands pressure + keeps supporting variety.`},
+ {t:'q',id:'p10',q:"Sustainable agriculture is…",o:["Farming that future generations can keep using","Farming with as much fertilizer as possible","Growing only one crop","Farming without any machines"],why:`Future generations can keep using it.`},
+ {t:'q',id:'p11',q:"Drip irrigation is an example of…",o:["Efficiency","Diversity","Resilience","Self-sufficiency"],why:`It does the job with less water and effort.`},
+ {t:'q',id:'p12',q:"Composting farm waste is an example of…",o:["Self-sufficiency","Efficiency","Diversity","Resilience"],why:`The farm makes its own fertilizer, taking care of itself.`},
+ {t:'q',id:'p13',q:"Crop rotation and mixed crops are examples of…",o:["Diversity","Efficiency","Self-sufficiency","Resilience"],why:`A variety of living things.`},
+ {t:'q',id:'p14',q:"Cover crops protecting the soil are an example of…",o:["Resilience","Diversity","Efficiency","Self-sufficiency"],why:`They help the farm recover quickly from problems.`},
+ {t:'q',id:'p15',q:"Why is growing only one type of crop less resilient?",o:["One disease or pest can wipe out everything, with nothing to fill the gap","It uses less water","It needs fewer workers","One crop always grows faster"],why:`No diversity = no backup. That's what happened to Ireland's potatoes in 1845.`}
+]}
 ];
-/* Lessons we know are coming but haven't arrived yet: shown greyed out in the sheet. */
-const COMING=[{lesson:"2",name:"Next lesson",sub:"Shows up once it's in Drive"}];
+const BOSS={id:'boss',code:'★',title:'Unit Review'};
+const MISSED={id:'missed',code:'↺',title:"Ones I've missed"};
 
-/* ---------- Decks ----------
-   Each lesson: recap card → first checks → second recap card (with example) → remaining checks. */
-const byId=id=>STAGES.find(s=>s.id===id);
-const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const WORDS=[
+['1.1 The Four Spheres',[['Ecology','The study of the relationships between living things and their environment.'],['Biotic','Living or once living (plants, animals, bacteria, a fallen log).'],['Abiotic','Non-living (water, rocks, sunlight, temperature).'],['Species','Organisms that can reproduce together and have fertile offspring.'],['Population','All of one species in an area. Always a number.'],['Community','All the populations in an area.'],['Ecosystem','The community plus its abiotic environment.'],['Habitat','The place where a species lives and gets what it needs.'],['Biodiversity','The variety of living things in an area.'],['Biome','A large region with a similar climate (boreal forest).'],['Atmosphere','Gases around Earth: ~78% nitrogen, 21% oxygen.'],['Lithosphere','Rocky outer layer: mountains, continents, ocean floor.'],['Hydrosphere','All water: oceans, lakes, ice, groundwater, clouds.'],['Biosphere','Every part of Earth where life exists.']]],
+['1.2 Energy in Ecosystems',[['Photosynthesis','CO₂ + water + light energy → glucose + oxygen.'],['Producer','Makes its own food. Always the 1st trophic level.'],['Consumer','Eats other organisms (primary, secondary, tertiary).'],['Herbivore / carnivore / omnivore','Eats plants / animals / both.'],['Scavenger','Eats animals that are already dead (vulture).'],['Decomposer','Breaks down dead things and waste, returning nutrients to the soil.'],['Apex predator','Top of the chain, no natural predators.'],['Keystone species','Much bigger effect than its numbers suggest.'],['Trophic level','A feeding level in a food chain.'],['Food chain / web','One path of energy / many connected chains.'],['10% rule','Only ~10% of energy passes to the next level.']]],
+['1.3 The Nitrogen Cycle',[['Biogeochemical cycle','Movement of matter through living and non-living parts of the environment.'],['Nitrogen fixation','Bacteria or lightning change N₂ into ammonium.'],['Nitrification','Bacteria change ammonium → nitrites → nitrates.'],['Assimilation','Plants absorb nitrates through their roots.'],['Denitrification','Bacteria change nitrates back into N₂ gas.'],['Eutrophication','Extra nutrients → algae bloom → oxygen used up.'],['Dead zone','Water with too little oxygen for fish.']]],
+['1.4 Carbon Cycle & Climate Change',[['Cellular respiration','Glucose + oxygen → CO₂ + water + energy. All living things.'],['Carbon sink','Stores carbon. Short: living things, atmosphere, ocean. Long: fossil fuels, soil, sedimentary rock.'],['Combustion','Burning; releases CO₂.'],['Extraction','Digging up fossil fuels.'],['Decomposition','Moves carbon from dead things into soil.'],['Fossilization','Locks carbon into fossil fuels and rock over millions of years.'],['Climate change','A long-term shift in Earth’s temperature and weather.'],['Mitigation','Reducing climate change.']]],
+['1.5 Ecological Succession',[['Ecological succession','Gradual change in a community after a disturbance.'],['Disturbance','Fire, flood, volcano or human activity.'],['Pioneer species','First to arrive; start building soil (lichens, mosses).'],['Climax community','The stable end community (Ontario mixed forest).'],['Primary succession','Starts on bare rock, no soil. Very slow.'],['Secondary succession','Starts on existing soil. Faster (decades).']]],
+['1.6 Human Impacts',[['HIPPO-C','Habitat loss, Invasive species, Pollution, Population, Overexploitation, Climate change.'],['Invasive species','Non-native, no predators, spreads fast.'],['Overexploitation','Harvesting faster than a species can reproduce.']]],
+['1.7 Sustainable Ecosystems & Agriculture',[['Carrying capacity','Largest population an environment can support over time.'],['Limiting factor','Anything that restricts population size.'],['Trophic cascade','Adding/removing a top predator affects the whole food web.'],['Sustainable ecosystem','Withstands pressure and keeps supporting many organisms.'],['Sustainable agriculture','Farming future generations can keep using.'],['Efficiency · self-sufficiency · diversity · resilience','Less effort · takes care of itself · variety · recovers quickly.']]]
+];
 
-const CARDS=[];
-STAGES.forEach(st=>{
-  const topic="Lesson "+st.lesson;
-  const pts=st.power.pts, half=Math.ceil(pts.length/2), qh=Math.ceil(st.qs.length/2);
-  const exHTML=st.power.ex?`<div class="ex"><b>${esc(st.power.ex[0])}</b>${st.power.ex[1].replace(/<b>/g,'<b class="k">')}</div>`:"";
-  const learn=(h,list,extra)=>({t:"learn",stage:st.id,topic,h,b:`<ul>${list.map(p=>`<li>${p}</li>`).join("")}</ul>${extra||""}`});
-  CARDS.push(learn(st.name,pts.slice(0,half)));
-  st.qs.slice(0,qh).forEach(q=>CARDS.push({t:"check",stage:st.id,topic,...q}));
-  CARDS.push(learn(st.power.title,pts.slice(half),exHTML));
-  st.qs.slice(qh).forEach(q=>CARDS.push({t:"check",stage:st.id,topic,...q}));
-});
-CARDS.forEach((c,i)=>c.key=c.t==="check"?c.id:c.stage+"-L"+i);
 
-function deckCards(k){
-  if(k==="missed"){const ids=Object.keys(S.miss).filter(id=>S.miss[id]>0);return shuffle(CARDS.filter(c=>c.t==="check"&&ids.includes(c.id)))}
-  return CARDS.filter(c=>c.stage===k);
-}
-const deckName=k=>k==="missed"?"Ones I've missed":`${byId(k).lesson} ${byId(k).name}`;
-const checksIn=k=>deckCards(k).filter(c=>c.t==="check").length;
-
-/* ---------- Saved progress (this browser only) ---------- */
-const KEY="biologySwipe.v1";
-let S={sessions:0,first:null,last:null,topics:{},miss:{},decks:{}};
-try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==="object")S=Object.assign(S,s)}catch(e){}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-const finished=k=>!!(S.decks[k]&&S.decks[k].runs>0);
-const firstUnfinished=()=>STAGES.find(s=>!finished(s.id));
-
-/* ---------- Feed ---------- */
-const feed=document.getElementById("feed"),countEl=document.getElementById("count"),barEl=document.getElementById("bar"),hint=document.getElementById("hint");
-let cur=STAGES[0].id,answered={},right=0,checks=0,missedNow=new Set(),started=false,io;
-
-function kick(c,extra){return `<div class="kick"><span>${esc(c.topic)}</span>${extra||""}</div>`}
-function slideFor(c,n,retry){
-  const el=document.createElement("section");el.className="slide";el.dataset.n=n;
-  if(c.t==="learn"){
-    el.innerHTML=`<article class="c">${kick(c,'<span>·</span><span>Recap</span>')}<h2>${esc(c.h)}</h2>${c.b}</article>`;
-  }else{
-    const opts=[c.a,...c.w], order=shuffle(opts.map((o,i)=>i));
-    el.innerHTML=`<article class="c">${kick(c,retry?'<span>·</span><span class="r">Second try</span>':'<span>·</span><span>Quick check</span>')}
-      ${c.sc?`<p class="sc">${esc(c.sc)}</p>`:""}<p class="q">${esc(c.q)}</p><div class="opts">${order.map(i=>`<button class="opt" data-i="${i}">${esc(opts[i])}</button>`).join("")}</div>
-      <div class="why"></div></article>`;
-    el.querySelectorAll(".opt").forEach(b=>b.addEventListener("click",()=>answer(el,c,+b.dataset.i,retry)));
+/* ============ PARENT SYNC → Google Sheet "Sebastian Science progress" ============
+   Same columns as the English and Geography sheets: received_at, at, device, app, kind, item, result, value, event_id.
+   Paste the Apps Script web-app URL (ends in /exec) between the quotes. Empty = no syncing; the game still works. */
+const SYNC_URL='https://script.google.com/macros/s/AKfycbyfIdk8HRTSDfdA7hsgoI2300RxOVMcJEwDwO5XCWy9UzwEuO-qoDtfjjCl3mnFQDtc5A/exec';
+const SYNC_APP='biology';
+const SYNC={
+  dev:(()=>{try{let d=localStorage.getItem('scienceDevice');if(!d){d=[...crypto.getRandomValues(new Uint8Array(6))].map(b=>b.toString(16).padStart(2,'0')).join('');localStorage.setItem('scienceDevice',d)}return d}catch(e){return 'nostorage000'}})(),
+  n:0,t:null,
+  q(){try{return JSON.parse(localStorage.getItem('scienceSyncQueue'))||[]}catch(e){return[]}},
+  setq(a){try{localStorage.setItem('scienceSyncQueue',JSON.stringify(a.slice(-2000)))}catch(e){}},
+  log(kind,item,result,value,id,at){
+    if(!SYNC_URL)return;
+    const ev={at:at||new Date().toISOString(),device:this.dev,app:SYNC_APP,kind,item:item||'',result:result||'',value:value==null?'':String(value),event_id:id||(this.dev+'-'+Date.now().toString(36)+'-'+(this.n++))};
+    const a=this.q();a.push(ev);this.setq(a);
+    clearTimeout(this.t);this.t=setTimeout(()=>this.flush(),2500);
+  },
+  flush(){
+    if(!SYNC_URL||this.busy)return;const a=this.q();if(!a.length)return;
+    const batch=a.slice(0,200);this.busy=true;
+    fetch(SYNC_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({events:batch}),keepalive:true})
+      .then(()=>{const ids=new Set(batch.map(e=>e.event_id));this.setq(this.q().filter(e=>!ids.has(e.event_id)));try{localStorage.setItem('scienceSyncLast',Date.now())}catch(e){}})
+      .catch(()=>{}).finally(()=>{this.busy=false;if(this.q().length&&this.q().length!==a.length)setTimeout(()=>this.flush(),1000)});
+  },
+  backfill(){ // one-time copy of progress made before syncing was switched on
+    if(!SYNC_URL)return;try{if(localStorage.getItem('scienceSyncBackfill.'+SYNC_APP))return}catch(e){return}
+    const at=new Date().toISOString(),bf=k=>'bf-'+this.dev+'-'+k+'-'+SYNC_APP;let any=false;
+    DECKS.forEach(d=>{const s=S.decks[d.id];if(!s)return;let r=0,w=0;qOf(d).forEach(q=>{const L=S.log[q.id];if(L){r+=L.r;w+=L.w}});
+      if(r+w){any=true;this.log('past_topic',d.id,'','r'+r+'w'+w,bf('past_topic-'+d.id),at)}
+      const f=qOf(d).filter(q=>q.id in s.first);if(f.length)this.log('past_deck',d.id,'','best'+Math.round(f.filter(q=>s.first[q.id]).length/f.length*100)+'runs'+(s.runs||0),bf('past_deck-'+d.id),at)});
+    Object.keys(S.missed).forEach(id=>this.log('past_miss',id,'',1,bf('past_miss-'+id),at));
+    if(any)this.log('past_sessions','','',DECKS.reduce((a,d)=>a+((S.decks[d.id]||{}).runs||0),0),bf('past_sessions'),at);
+    try{localStorage.setItem('scienceSyncBackfill.'+SYNC_APP,'1')}catch(e){}
   }
+};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')SYNC.flush()});
+
+/* ============ ENGINE ============ */
+const KEY='biologySwipe.v2';
+const QMAP={},QDECK={},ALLQ=[];
+DECKS.forEach(d=>d.cards.forEach(c=>{if(c.t==='q'){QMAP[c.id]=c;QDECK[c.id]=d.id;ALLQ.push(c)}}));
+const DECK=Object.fromEntries(DECKS.map(d=>[d.id,d]));
+const qOf=d=>d.cards.filter(c=>c.t==='q');
+
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.v===2)return s}catch(e){}return{v:2,decks:{},missed:{},log:{},boss:{runs:0,best:null}}}
+let S=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function st(id){return S.decks[id]||(S.decks[id]={right:{},first:{},done:false,runs:0,last:0})}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const $=id=>document.getElementById(id);
+
+let cur=null,queue=[],pos=0,sess={total:0,right:{},firstRight:0,firstSeen:{}},busy=false,cardEl=null;
+
+function firstUnfinished(){const d=DECKS.find(d=>!st(d.id).done);return d?d.id:'boss'}
+function meta(id){return id==='boss'?BOSS:id==='missed'?MISSED:DECK[id]}
+function nextDeckAfter(id){const i=DECKS.findIndex(d=>d.id===id);if(i<0)return null;const n=DECKS.slice(i+1).find(d=>!st(d.id).done)||DECKS.find(d=>!st(d.id).done);return n?n.id:'boss'}
+
+function startDeck(id){
+  if(!meta(id))id=firstUnfinished();
+  cur=id;try{history.replaceState(null,'','#'+id)}catch(e){}
+  const m=meta(id);
+  $('dk').textContent=id==='boss'?'Boss':id==='missed'?'Review':'Lesson '+m.lesson;
+  $('dn').textContent=(id==='boss'||id==='missed'?'':m.code+' · ')+m.title;
+  let cards;
+  if(id==='boss'){
+    const pick=shuffle(ALLQ.slice()).slice(0,20);
+    cards=[{t:'r',tag:'Unit review',h:'Boss round',b:`<p><b>20 questions</b> from every lesson, no recap cards.</p><p>Miss one and it comes back a few cards later. Clear them all to win.</p>`}].concat(pick);
+  }else if(id==='missed'){
+    const ids=Object.keys(S.missed).filter(i=>QMAP[i]);
+    cards=ids.length?[{t:'r',tag:"Ones I've missed",h:ids.length+' to fix',b:`<p>Every question you've missed, in one deck. Get one right the first time here and it leaves the pile.</p>`}].concat(shuffle(ids.map(i=>QMAP[i]))):[{t:'r',tag:"Ones I've missed",h:'Nothing here',b:`<p>No missed questions right now. Nice.</p>`,end:1}];
+  }else{
+    const d=DECK[id],s=st(id);
+    if(s.done){s.right={};s.done=false}
+    const partial=Object.keys(s.right).length>0;
+    cards=d.cards.filter(c=>c.t!=='q'||!(partial&&s.right[c.id]));
+    if(partial)cards.unshift({t:'r',tag:'Welcome back',h:'Picking up where you left off',b:`<p>${Object.keys(s.right).length} of ${qOf(d).length} already done. Quick recap, then the rest.</p>`});
+    s.runs++;s.last=Date.now();save();
+  }
+  queue=cards.map(c=>Object.assign({},c,{_a:false}));
+  if(!(queue.length===1&&queue[0].end))queue.push({t:'end'});
+  pos=0;sess={total:queue.filter(c=>c.t==='q').length,right:{},firstRight:0,firstSeen:{}};
+  closeSheets();show(true);updateBar();
+  SYNC.log('start',id);
+}
+
+function updateBar(){
+  let p;
+  if(DECK[cur]){const d=DECK[cur],s=st(cur);p=Object.keys(s.right).length/qOf(d).length}
+  else p=sess.total?Object.keys(sess.right).length/sess.total:1;
+  $('bar').style.width=Math.round(p*100)+'%';
+}
+
+function renderCard(c){
+  const el=document.createElement('section');el.className='card in';
+  const m=meta(cur);
+  const tag=c.tag||(c.t==='w'?'⚠ From your notes':c.t==='q'?(cur==='boss'||cur==='missed'?'Lesson '+DECK[QDECK[c.id]].lesson+' · quick check':'Quick check'):m.title);
+  if(c.t==='r'||c.t==='w'){
+    if(c.t==='w')el.classList.add('warn');
+    el.innerHTML=`<div class="tag">${tag}</div><h2>${c.h}</h2>${c.b}<div class="hint"><button class="go" data-next>${c.end?'Pick a deck':'Swipe up ↑'}</button></div>`;
+    if(c.end)el.querySelector('[data-next]').onclick=e=>{e.stopPropagation();openSheet()};
+  }else if(c.t==='q'){
+    if(!c._ord)c._ord=shuffle(c.o.map((_,i)=>i));
+    el.innerHTML=`<div class="tag ${c.retry?'':'m'}">${c.retry?'↺ Back again':tag}</div><h2 class="q">${c.q}</h2><div class="opts">${c._ord.map(i=>`<button data-i="${i}">${c.o[i]}</button>`).join('')}</div><div class="fbw"></div><div class="hint"><button data-next>Answer to continue</button></div>`;
+    el.querySelectorAll('.opts button').forEach(b=>b.onclick=e=>{e.stopPropagation();answer(c,+b.dataset.i,el)});
+  }else{ // end
+    SYNC.log('finish',cur,'',sess.firstRight+'of'+sess.total);
+    el.innerHTML=endHTML();
+    el.querySelectorAll('[data-deck]').forEach(b=>b.onclick=e=>{e.stopPropagation();startDeck(b.dataset.deck)});
+    const sb=el.querySelector('[data-sheet]');if(sb)sb.onclick=e=>{e.stopPropagation();openSheet()};
+  }
+  const nb=el.querySelector('[data-next]');if(nb&&!c.end&&c.t!=='end')nb.onclick=e=>{e.stopPropagation();next()};
   return el;
 }
-function answer(el,c,i,retry){
-  const key=el.dataset.n;if(answered[key])return;answered[key]=1;
-  const ok=i===0;
-  el.querySelectorAll(".opt").forEach(b=>{b.disabled=true;const j=+b.dataset.i;
-    if(j===0)b.classList.add("right");else if(j===i)b.classList.add("wrong");else b.classList.add("fade")});
-  const w=el.querySelector(".why");
-  w.innerHTML=`<strong class="${ok?"ok":"no"}">${ok?"Right.":"Not quite."}</strong>${esc(c.ex)}${ok?"":'<p class="small" style="margin-top:8px">This one comes back in a few cards.</p>'}`;
-  w.classList.add("on");
-  if(!retry){checks++;if(ok)right++}
-  const t=S.topics[c.stage]||(S.topics[c.stage]={r:0,w:0});ok?t.r++:t.w++;
-  if(ok){if(S.miss[c.id])S.miss[c.id]=Math.max(0,S.miss[c.id]-1);if(!S.miss[c.id])delete S.miss[c.id]}
-  else{S.miss[c.id]=(S.miss[c.id]||0)+1;missedNow.add(c.id);requeue(el,c)}
-  S.last=new Date().toISOString();save();
-}
-function requeue(el,c){
-  const slides=[...feed.querySelectorAll(".slide")];const idx=slides.indexOf(el);
-  const target=slides[Math.min(idx+5,slides.length-1)]; /* the last slide is the results card */
-  const s=slideFor(c,"r"+Date.now(),true);feed.insertBefore(s,target);observe(s);updateCount();
-}
-function endSlide(){
-  const el=document.createElement("section");el.className="slide";el.dataset.end="1";
-  el.innerHTML=`<article class="c" id="endc"></article>`;return el;
-}
-/* Next lesson after this one that he hasn't finished yet. */
-function nextDeck(){
-  const i=STAGES.findIndex(s=>s.id===cur);
-  const rest=i>=0?STAGES.slice(i+1):STAGES;
-  const n=rest.find(s=>!finished(s.id))||rest[0];
-  return n?n.id:null;
-}
-function renderEnd(){
-  const c=document.getElementById("endc");if(!c)return;
-  const pct=checks?Math.round(right/checks*100):0;
-  if(checks&&cur!=="missed"){const d=S.decks[cur]||(S.decks[cur]={best:0,runs:0});d.best=Math.max(d.best,pct);save()}
-  const left=Object.keys(S.miss).length;
-  const topics=[...new Set([...missedNow].map(id=>{const k=CARDS.find(c=>c.id===id);return k?deckName(k.stage):""}).filter(Boolean))];
-  const nx=cur==="missed"?null:nextDeck();
-  const allDone=STAGES.every(s=>finished(s.id));
-  c.innerHTML=`<div class="kick"><span>${esc(deckName(cur))}</span><span>·</span><span>Done</span></div>
-    <div class="big">${right}/${checks}</div><p class="small">${checks?`${pct}% on the first try.`:"No quick checks answered yet."}</p>
-    ${topics.length?`<p>Missed this round: ${topics.map(esc).join(", ")}.</p>`:checks?"<p>Clean run.</p>":""}
-    ${!nx&&allDone?`<p class="small">That's every lesson so far. New ones show up here as Mr. Mimna's slides come in.</p>`:""}
-    ${left?`<button class="btn main" id="domiss">Redo the ones I've missed (${left})</button>`:""}
-    ${nx?`<button class="btn ${left?"":"main"}" id="donext">Next: ${esc(deckName(nx))}</button>`:""}
-    <button class="btn ${left||nx?"":"main"}" id="dopick">Pick another deck</button>`;
-  const dm=document.getElementById("domiss");if(dm)dm.onclick=()=>start("missed");
-  const dn=document.getElementById("donext");if(dn)dn.onclick=()=>start(nx);
-  document.getElementById("dopick").onclick=openSheet;
-}
-function observe(s){io&&io.observe(s)}
-function updateCount(){
-  const slides=[...feed.querySelectorAll(".slide")];
-  const top=feed.scrollTop,h=feed.clientHeight;const i=Math.min(slides.length-1,Math.round(top/h));
-  countEl.textContent=`${i+1}/${slides.length}`;barEl.style.width=((i+1)/slides.length*100)+"%";
-  if(i>0)hint.style.opacity=0;
-  if(slides[i]&&slides[i].dataset.end){
-    if(!slides[i].dataset.counted&&checks){slides[i].dataset.counted=1;if(cur!=="missed"){const d=S.decks[cur]||(S.decks[cur]={best:0,runs:0});d.runs++;save()}}
-    renderEnd();
+
+function endHTML(){
+  const nMiss=Object.keys(S.missed).length;
+  let h,sub,btns='';
+  if(DECK[cur]){
+    const d=DECK[cur],s=st(cur),q=qOf(d),ft=q.filter(x=>s.first[x.id]===true).length;
+    h=`${d.code} done ✓`;sub=`<div class="big">${sess.firstRight}/${sess.total}</div><p>right on the first try this round.</p>`;
+    const n=nextDeckAfter(cur);
+    if(n)btns+=`<button class="btn p" data-deck="${n}">Next: ${meta(n).title}</button>`;
+  }else if(cur==='boss'){
+    h='Boss cleared ★';sub=`<div class="big">${sess.firstRight}/${sess.total}</div><p>right on the first try.</p>`;
+    btns+=`<button class="btn p" data-deck="boss">New boss round</button>`;
+  }else{
+    h='Pile cleared';sub=`<p>${nMiss?nMiss+' still in the pile (missed again this round).':'Nothing left in the pile.'}</p>`;
   }
+  if(nMiss&&cur!=='missed')btns+=`<button class="btn" data-deck="missed">Ones I've missed (${nMiss})</button>`;
+  btns+=`<button class="btn" data-sheet>All decks</button>`;
+  return `<div class="tag">Finished</div><h2>${h}</h2>${sub}<div class="btns">${btns}</div>`;
 }
-function start(deck){
-  cur=deck;answered={};right=0;checks=0;missedNow=new Set();
-  const run=deckCards(deck);feed.innerHTML="";
-  if(io)io.disconnect();
-  io=new IntersectionObserver(()=>updateCount(),{root:feed,threshold:.6});
-  run.forEach((c,n)=>{const s=slideFor(c,n,false);feed.appendChild(s);observe(s)});
-  const e=endSlide();feed.appendChild(e);observe(e);
-  feed.scrollTop=0;document.getElementById("deckname").textContent=deckName(deck);
-  hint.style.opacity=1;updateCount();closeSheets();
-  if(!started){started=true;S.sessions++;S.first=S.first||new Date().toISOString();S.last=new Date().toISOString();save()}
-}
-feed.addEventListener("scroll",()=>{clearTimeout(feed._t);feed._t=setTimeout(updateCount,60)},{passive:true});
-document.addEventListener("keydown",e=>{
-  if(document.querySelector(".sheet.on")){if(e.key==="Escape")closeSheets();return}
-  if(["ArrowDown","PageDown"," "].includes(e.key)){e.preventDefault();feed.scrollBy({top:feed.clientHeight,behavior:"smooth"})}
-  if(["ArrowUp","PageUp"].includes(e.key)){e.preventDefault();feed.scrollBy({top:-feed.clientHeight,behavior:"smooth"})}
-});
 
-/* ---------- Deck sheet, parent progress ---------- */
-const sheet=document.getElementById("sheet"),fsheet=document.getElementById("fsheet");
+function answer(c,i,el){
+  if(c._a)return;c._a=true;
+  const ok=i===0;
+  const L=S.log[c.id]||(S.log[c.id]={r:0,w:0});ok?L.r++:L.w++;
+  const first=!c.retry&&!sess.firstSeen[c.id];sess.firstSeen[c.id]=1;
+  if(ok&&first)sess.firstRight++;
+  SYNC.log('answer',c.id,ok?'right':'wrong',first?'first':'second');
+  if(DECK[cur]){const s=st(cur);if(!(c.id in s.first))s.first[c.id]=ok;if(ok)s.right[c.id]=1;s.last=Date.now();
+    if(qOf(DECK[cur]).every(q=>s.right[q.id]))s.done=true;}
+  if(ok){sess.right[c.id]=1;if(cur==='missed'&&first)delete S.missed[c.id];
+    if(cur==='boss'&&queue.slice(pos+1).every(x=>x.t!=='q')){S.boss.runs++;S.boss.best=Math.max(S.boss.best||0,sess.firstRight);S.boss.last=Date.now()}}
+  else{S.missed[c.id]=1;const at=Math.min(pos+4,queue.length-1);queue.splice(at,0,Object.assign({},QMAP[c.id],{_a:false,retry:true}));}
+  save();updateBar();
+  const opts=el.querySelector('.opts');opts.classList.add('done');
+  opts.querySelectorAll('button').forEach(b=>{const k=+b.dataset.i;if(k===0)b.classList.add('ok');else if(k===i)b.classList.add('bad');b.disabled=true});
+  el.querySelector('.fbw').innerHTML=`<div class="fb"><span class="v ${ok?'y':'n'}">${ok?pick(['Nice.','Got it.','Yes.','Exactly.','Correct.']):'Not quite.'}</span>${c.why}${ok?'':'<span class="back">This one comes back in a few cards.</span>'}</div>`;
+  const nb=el.querySelector('[data-next]');nb.textContent='Swipe up ↑';nb.classList.add('go');
+  setTimeout(()=>{el.querySelector('.fb').scrollIntoView({behavior:'smooth',block:'nearest'})},60);
+}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+
+function show(first){
+  const c=queue[pos];const el=renderCard(c);
+  $('stage').appendChild(el);
+  const old=cardEl;cardEl=el;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.remove('in');if(old){old.classList.add('out');setTimeout(()=>old.remove(),400)}}));
+}
+function next(){
+  if(busy||!cardEl)return;
+  const c=queue[pos];
+  if(c.t==='q'&&!c._a){cardEl.querySelector('.hint button').classList.remove('shake');void cardEl.offsetWidth;cardEl.querySelector('.hint button').classList.add('shake');return}
+  if(c.t==='end'||c.end||pos>=queue.length-1)return;
+  busy=true;pos++;show();setTimeout(()=>busy=false,380);
+}
+
+/* gestures */
+let ty=null,tScroll=false;
+document.addEventListener('touchstart',e=>{if(sheetOpen())return;ty=e.touches[0].clientY;const card=e.target.closest('.card');tScroll=!!card&&card.scrollHeight>card.clientHeight+2&&card.scrollTop+card.clientHeight<card.scrollHeight-4},{passive:true});
+document.addEventListener('touchend',e=>{if(ty===null||sheetOpen())return;const dy=e.changedTouches[0].clientY-ty;ty=null;if(dy<-60&&!tScroll)next()},{passive:true});
+let wheelLock=0;
+document.addEventListener('wheel',e=>{if(sheetOpen())return;const card=e.target.closest('.card');if(card&&card.scrollHeight>card.clientHeight+2&&card.scrollTop+card.clientHeight<card.scrollHeight-4)return;if(e.deltaY>30&&Date.now()>wheelLock){wheelLock=Date.now()+700;next()}},{passive:true});
+document.addEventListener('keydown',e=>{if(sheetOpen()){if(e.key==='Escape')closeSheets();return}
+  if(['ArrowDown','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();next()}
+  const c=queue[pos];if(c&&c.t==='q'&&!c._a&&/^[1-4]$/.test(e.key)){const b=cardEl.querySelectorAll('.opts button')[+e.key-1];if(b)b.click()}});
+
+/* sheets */
+function sheetOpen(){return $('sheet').classList.contains('on')||$('words').classList.contains('on')}
+function closeSheets(){$('sheet').classList.remove('on');$('words').classList.remove('on');$('veil').classList.remove('on')}
+function fmtDate(t){if(!t)return'–';const d=new Date(t);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}
 function openSheet(){
-  const up=firstUnfinished();
-  const left=Object.keys(S.miss).length;
-  document.getElementById("decks").innerHTML=
-    STAGES.map(st=>{const b=S.decks[st.id],done=finished(st.id),isUp=up&&up.id===st.id;
-      return `<button class="deck${st.id===cur?" cur":""}${done?" done":""}${isUp?" today":""}" data-k="${st.id}"><span class="day">L<big>${esc(st.lesson)}</big></span><div class="tx"><b>${esc(st.name)}${isUp?' <i class="new">Up next</i>':""}</b><span>${esc(st.power.title)}</span></div><span class="scr">${b&&b.runs?`Best ${b.best}%`:`${checksIn(st.id)} checks`}</span></button>`}).join("")
-    +COMING.map(c=>`<div class="deck soon" aria-disabled="true"><span class="day">L<big>${esc(c.lesson)}</big></span><div class="tx"><b>${esc(c.name)}</b><span>${esc(c.sub)}</span></div></div>`).join("")
-    +(left?`<button class="deck${cur==="missed"?" cur":""}" data-k="missed"><div class="tx"><b>Ones I've missed</b><span>Only the questions you got wrong</span></div><span class="scr">${left}</span></button>`:"");
-  document.querySelectorAll("#sheet button.deck").forEach(b=>b.onclick=()=>start(b.dataset.k));
-  document.getElementById("stats").hidden=true;
-  sheet.classList.add("on");
+  const nMiss=Object.keys(S.missed).length;
+  let h=`<div class="grab"></div><h3>Decks</h3><h4>Unit 4 · Sustainable Ecosystems</h4>`;
+  DECKS.forEach(d=>{const s=st(d.id),q=qOf(d).length,r=Object.keys(s.right).length;
+    h+=`<button class="row ${s.done?'fin':''} ${cur===d.id?'cur':''}" data-deck="${d.id}"><span class="c">${s.done?'✓':d.code}</span><span class="t"><b>${d.title}</b><small>Lesson ${d.lesson} · ${q} checks</small></span><span class="s">${s.done?'done':r?r+'/'+q:''}</span></button>`});
+  h+=`<h4>Review</h4><button class="row ${cur==='missed'?'cur':''}" data-deck="missed"><span class="c">↺</span><span class="t"><b>Ones I've missed</b><small>Every question you've got wrong</small></span><span class="s">${nMiss}</span></button>`;
+  h+=`<button class="row dark" data-deck="boss"><span class="c">★</span><span class="t"><b>Unit Review boss</b><small>20 random checks from every lesson</small></span><span class="s">${S.boss.best!=null?'best '+S.boss.best+'/20':''}</span></button>`;
+  // parents
+  let rows='',tot=0,totFirst=0,totRight=0;
+  DECKS.forEach(d=>{const s=st(d.id),q=qOf(d),f=q.filter(x=>x.id in s.first),fr=f.filter(x=>s.first[x.id]).length;tot+=q.length;totFirst+=fr;totRight+=f.length;
+    rows+=`<tr><td>${d.code} ${d.title}</td><td class="n">${s.done?'✓':Object.keys(s.right).length+'/'+q.length}</td><td class="n">${f.length?Math.round(fr/f.length*100)+'%':'–'}</td><td class="n">${fmtDate(s.last)}</td></tr>`});
+  const worst=Object.entries(S.log).filter(([k,v])=>v.w>0&&QMAP[k]).sort((a,b)=>b[1].w-a[1].w||a[1].r-b[1].r).slice(0,8);
+  h+=`<details class="par"><summary>Progress (for parents)</summary><div class="pbody">
+   <p>Saved in this browser only. First-try % counts each question's very first answer.</p>
+   <table><tr><th>Deck</th><th class="n">Right</th><th class="n">1st try</th><th class="n">Last played</th></tr>${rows}</table>
+   <p><b>Overall first try:</b> ${totRight?Math.round(totFirst/totRight*100)+'% of '+totRight+' answered':'nothing yet'} · <b>Boss:</b> ${S.boss.runs?S.boss.runs+' cleared, best '+S.boss.best+'/20':'not cleared yet'} · <b>Missed pile:</b> ${nMiss}</p>
+   ${worst.length?`<p><b>Most missed</b></p><ol>${worst.map(([k,v])=>`<li>${QMAP[k].q} <span style="color:var(--mute)">(${DECK[QDECK[k]].code}, wrong ${v.w}×, right ${v.r}×)</span></li>`).join('')}</ol>`:''}
+   <p style="color:var(--mute)">${SYNC_URL?(()=>{let t=0;try{t=+localStorage.getItem('scienceSyncLast')}catch(e){};const q=SYNC.q().length;return 'Parent sheet: connected · last sent '+(t?fmtDate(t):'not yet')+(q?' · '+q+' waiting to send':'')})():'Parent sheet: not connected'}</p>
+   <button class="reset" id="reset">Reset all progress</button></div></details>`;
+  $('sheet').innerHTML=h;
+  $('sheet').querySelectorAll('[data-deck]').forEach(b=>b.onclick=()=>startDeck(b.dataset.deck));
+  let armed=false;$('reset').onclick=e=>{if(!armed){armed=true;e.target.textContent='Tap again to erase everything';return}S={v:2,decks:{},missed:{},log:{},boss:{runs:0,best:null}};save();startDeck(firstUnfinished())};
+  $('sheet').classList.add('on');$('veil').classList.add('on');
 }
-function closeSheets(){sheet.classList.remove("on");fsheet.classList.remove("on")}
-document.getElementById("deckbtn").onclick=openSheet;
-document.getElementById("fbtn").onclick=()=>fsheet.classList.add("on");
-document.getElementById("fclose").onclick=closeSheets;
-[sheet,fsheet].forEach(s=>s.addEventListener("click",e=>{if(e.target===s)closeSheets()}));
-document.getElementById("statsbtn").onclick=()=>{
-  const st=document.getElementById("stats");
-  if(!st.hidden){st.hidden=true;return}
-  const fmt=d=>d?new Date(d).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"never";
-  const topics=Object.entries(S.topics).filter(([k])=>byId(k)).map(([k,v])=>[k,v,v.r/(v.r+v.w)]).sort((a,b)=>a[2]-b[2]);
-  const misses=Object.entries(S.miss).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([id])=>CARDS.find(c=>c.id===id)).filter(Boolean);
-  st.innerHTML=`<div class="statrow"><span>Sessions</span><span>${S.sessions}</span></div>
-    <div class="statrow"><span>Last active</span><span>${fmt(S.last)}</span></div>
-    ${STAGES.map(s=>{const d=S.decks[s.id];return `<div class="statrow"><span>${esc(deckName(s.id))}</span><span>${d&&d.runs?`done ×${d.runs} · best ${d.best}%`:"not yet"}</span></div>`}).join("")}
-    ${topics.length?`<p class="small" style="margin:14px 4px 4px">By lesson, weakest first (all answers, including second tries):</p>`+topics.map(([k,v,p])=>`<div class="statrow"><span>${esc(deckName(k))}</span><span>${Math.round(p*100)}% of ${v.r+v.w}</span></div>`).join(""):'<p class="small" style="margin:14px 4px">No answers yet.</p>'}
-    ${misses.length?`<p class="small" style="margin:14px 4px 4px">Still missing:</p>`+misses.map(c=>`<div class="statrow"><span>${esc(c.q)}</span><span>${esc(c.topic)}</span></div>`).join(""):""}
-    <p class="small" style="margin:12px 4px 0">Saved on this device only.</p>`;
-  st.hidden=false;
-};
+function openWords(){
+  $('words').innerHTML=`<div class="grab"></div><h3>Word list</h3>`+WORDS.map(([g,ws])=>`<h4>${g}</h4><dl class="gl">${ws.map(([w,d])=>`<dt>${w}</dt><dd>${d}</dd>`).join('')}</dl>`).join('');
+  $('words').classList.add('on');$('veil').classList.add('on');
+}
+$('deckbtn').onclick=openSheet;$('sheetbtn').onclick=openSheet;$('wordsbtn').onclick=openWords;$('veil').onclick=closeSheets;
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(h&&h!==cur&&meta(h))startDeck(h)});
 
-let first=(firstUnfinished()||STAGES[0]).id;
-const h=location.hash.slice(1);if(h&&byId(h))first=h;
-window.addEventListener("hashchange",()=>{const d=location.hash.slice(1);if(d!==cur&&byId(d))start(d)});
-start(first);
+SYNC.log('open');SYNC.backfill();
+startDeck(location.hash.slice(1)||firstUnfinished());
+SYNC.flush();
 </script>
 </body>
 </html>
